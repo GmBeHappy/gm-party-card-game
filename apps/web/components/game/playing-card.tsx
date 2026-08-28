@@ -94,14 +94,14 @@ export function PlayingCard({
       aria-label={`${rankLabel(card.rank)} ${SUIT_NAME[card.suit]}`}
       aria-pressed={selected}
       whileTap={interactive ? { scale: 0.94 } : undefined}
-      animate={{ y: selected ? -22 : 0 }}
+      animate={{ y: selected ? -22 : disabled ? 7 : 0 }}
       transition={{ type: 'spring', stiffness: 380, damping: 18 }}
       className={cn(
-        'sticker relative block shrink-0 select-none overflow-hidden bg-face',
+        'sticker relative block shrink-0 select-none overflow-hidden',
         SIZE[size],
         size === 'xs' ? 'sticker-sm' : 'sticker',
         interactive ? 'sticker-lift cursor-pointer' : 'cursor-default',
-        disabled && 'saturate-[0.35]',
+        disabled ? 'bg-face-muted' : 'bg-face',
         selected && 'outline-4 outline-bubblegum outline-offset-2',
         className,
       )}
@@ -121,7 +121,6 @@ export function PlayingCard({
       >
         {glyph}
       </span>
-      {disabled && <span className="absolute inset-0 bg-ink/15" aria-hidden="true" />}
     </motion.button>
   )
 }

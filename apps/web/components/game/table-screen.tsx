@@ -121,7 +121,7 @@ export function TableScreen({
         <TrickPile cards={view.trick.cards} leaderName={leaderName} revolution={view.revolution} />
       </section>
 
-      <footer className="space-y-2 border-ink border-t-[3px] bg-cream px-4 pt-2 pb-safe">
+      <footer className="space-y-2 border-ink border-t-[3px] bg-rail px-4 pt-2 pb-safe">
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-2">
             {mySeat?.role != null && <RoleBadge role={mySeat.role} />}

@@ -100,7 +100,7 @@ export function ExchangeScreen({ view, actions }: { view: RoomView; actions: Roo
       </div>
 
       {give !== null && (
-        <footer className="space-y-3 border-ink border-t-[3px] bg-cream px-4 pt-3 pb-safe">
+        <footer className="space-y-3 border-ink border-t-[3px] bg-rail px-4 pt-3 pb-safe">
           <p className="text-center text-sm">
             เลือกไพ่ <span className="tabular text-bubblegum">{give}</span> ใบส่งคืน
           </p>

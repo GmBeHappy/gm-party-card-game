@@ -35,6 +35,7 @@
   --color-bubblegum: var(--bubblegum);
   --color-tangerine: var(--tangerine);
   --color-lemon: var(--lemon);
+  --color-rail: var(--rail);
   --color-blueberry: var(--blueberry);
 
   /* Four-colour deck: 18 cards fan out, and suit should read at a glance */
@@ -43,6 +44,7 @@
   --color-suit-diamond: var(--suit-diamond);
   --color-suit-club: var(--suit-club);
   --color-face: var(--face);
+  --color-face-muted: var(--face-muted);
 
   --radius-sm: calc(var(--radius) * 0.5);
   --radius-md: calc(var(--radius) * 0.7);
@@ -59,6 +61,8 @@
 :root {
   --ink: #2b1b3d;
   --cream: #fff6e4;
+  /* The tray the hand sits on: deeper than the panels, so card faces pop. */
+  --rail: #f6e2ba;
   --mint: #5fd08a;
   --mint-deep: #2fae66;
   --bubblegum: #ff6fa5;
@@ -87,6 +91,7 @@
   --radius: 1.1rem;
 
   --face: #fffdf5;
+  --face-muted: #e6dfd2;
   --suit-spade: #2b1b3d;
   --suit-heart: #ff4d6d;
   --suit-diamond: #ff9f1c;
