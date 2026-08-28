@@ -30,24 +30,44 @@ const SUIT_COLOR: Readonly<Record<Suit, string>> = {
 export type CardSize = 'xs' | 'sm' | 'md' | 'lg'
 
 const SIZE: Readonly<Record<CardSize, string>> = {
-  xs: 'h-[46px] w-[32px] rounded-[7px] text-[10px]',
-  sm: 'h-[66px] w-[46px] rounded-[10px] text-[13px]',
-  md: 'h-[104px] w-[72px] rounded-[14px] text-lg',
-  lg: 'h-[136px] w-[94px] rounded-[18px] text-xl',
+  xs: 'h-[46px] w-[32px] rounded-[7px]',
+  sm: 'h-[66px] w-[46px] rounded-[10px]',
+  md: 'h-[104px] w-[72px] rounded-[14px]',
+  lg: 'h-[136px] w-[94px] rounded-[18px]',
 }
 
-const GLYPH_SIZE: Readonly<Record<CardSize, string>> = {
-  xs: 'text-[14px]',
-  sm: 'text-2xl',
-  md: 'text-[40px]',
-  lg: 'text-5xl',
+/*
+ * In a fanned hand only the left edge of each card is showing, so the corner
+ * index is the whole read — it gets the space a centre pip would normally take.
+ * Rank sits directly above its suit, the way a physical index does.
+ */
+const INDEX_RANK: Readonly<Record<CardSize, string>> = {
+  xs: 'text-[11px]',
+  sm: 'text-base',
+  md: 'text-2xl',
+  lg: 'text-3xl',
+}
+
+const INDEX_SUIT: Readonly<Record<CardSize, string>> = {
+  xs: 'text-[10px]',
+  sm: 'text-sm',
+  md: 'text-xl',
+  lg: 'text-2xl',
+}
+
+/** The large glyph only matters once you can see the whole card. */
+const BIG_GLYPH: Readonly<Record<CardSize, string>> = {
+  xs: 'hidden',
+  sm: 'text-xl',
+  md: 'text-[32px]',
+  lg: 'text-[44px]',
 }
 
 export interface PlayingCardProps {
   card: Card
   size?: CardSize
   selected?: boolean
-  /** Illegal right now: greyed out and not clickable. */
+  /** Illegal right now: tinted back and not clickable, but still readable. */
   disabled?: boolean
   onClick?: () => void
   className?: string
@@ -77,32 +97,31 @@ export function PlayingCard({
       animate={{ y: selected ? -22 : 0 }}
       transition={{ type: 'spring', stiffness: 380, damping: 18 }}
       className={cn(
-        'sticker relative flex shrink-0 select-none flex-col justify-between bg-face px-1.5 py-1 font-extrabold',
+        'sticker relative block shrink-0 select-none overflow-hidden bg-face',
         SIZE[size],
         size === 'xs' ? 'sticker-sm' : 'sticker',
         interactive ? 'sticker-lift cursor-pointer' : 'cursor-default',
-        disabled && 'opacity-40 grayscale',
-        selected && 'ring-4 ring-lemon',
+        disabled && 'saturate-[0.35]',
+        selected && 'outline-4 outline-bubblegum outline-offset-2',
         className,
       )}
     >
-      <span className={cn('flex items-center gap-px leading-none', colour)}>
-        {rankLabel(card.rank)}
-        <span>{glyph}</span>
+      <span
+        className={cn(
+          'absolute top-1 left-1.5 flex flex-col items-center font-extrabold leading-[0.85]',
+          colour,
+        )}
+      >
+        <span className={INDEX_RANK[size]}>{rankLabel(card.rank)}</span>
+        <span className={INDEX_SUIT[size]}>{glyph}</span>
       </span>
       <span
-        className={cn('-mt-0.5 self-center leading-none', GLYPH_SIZE[size], colour)}
+        className={cn('absolute right-1 bottom-0.5 leading-none', BIG_GLYPH[size], colour)}
         aria-hidden="true"
       >
         {glyph}
       </span>
-      <span
-        className={cn('flex rotate-180 items-center gap-px self-end leading-none', colour)}
-        aria-hidden="true"
-      >
-        {rankLabel(card.rank)}
-        <span>{glyph}</span>
-      </span>
+      {disabled && <span className="absolute inset-0 bg-ink/15" aria-hidden="true" />}
     </motion.button>
   )
 }

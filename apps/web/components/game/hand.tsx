@@ -4,11 +4,14 @@ import type { Card } from '@slave/game'
 import { motion } from 'motion/react'
 import { PlayingCard } from '@/components/game/playing-card'
 
-/** Spread the fan across roughly 10 degrees, whatever the hand size. */
+/**
+ * A gentle spread. Anything steeper turns a heavily overlapped hand into a
+ * sawtooth and makes the indices harder to compare, not easier.
+ */
 function fanAngle(index: number, total: number): number {
   if (total < 2) return 0
   const middle = (total - 1) / 2
-  return ((index - middle) / middle) * 5
+  return ((index - middle) / middle) * 3
 }
 
 const container = {
@@ -45,7 +48,7 @@ export function Hand({
   const playableSet = new Set(playable)
 
   return (
-    <div className="-mx-4 overflow-x-auto overflow-y-visible px-4 pt-12 pb-2">
+    <div className="-mx-4 overflow-x-auto overflow-y-visible px-4 pt-12 pb-6">
       <motion.div
         key={dealKey}
         variants={container}
