@@ -106,6 +106,12 @@ and room codes, which have to line up in a column. Body leading is 1.65 and the
 display ink stroke is 2px rather than 3px — Thai stacks vowels and tone marks
 above and below the line, and a heavier stroke closes them up.
 
+Pointing at a playable card pulls it upright out of the fan, lifts it, and
+throws a longer shadow — the hover is gated behind `@media (hover: hover)` so a
+phone never gets stuck in it. The card back is built like a real one: an inset
+frame, a dotted field, and a crown medallion, because the rank ladder from
+เศรษฐี to สลาฟ is what the game is about.
+
 The deck is four-coloured — grape spades, cherry hearts, tangerine diamonds,
 leaf clubs. That is not decoration: you scan an 18-card fan for a matching suit
 many times a round, and two colours make that slower.

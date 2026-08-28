@@ -139,6 +139,19 @@
     box-shadow: 2px 2px 0 0 var(--ink);
   }
 
+  /*
+   * Lifting a card off the table throws a longer shadow. Gated on a real
+   * pointer: on a phone there is no hover, only a tap that would stick.
+   */
+  .sticker-lift {
+    transition: box-shadow 140ms ease-out;
+  }
+  @media (hover: hover) {
+    .sticker-lift:not(:disabled):hover {
+      box-shadow: 8px 9px 0 0 var(--ink);
+    }
+  }
+
   /* Pressing pushes the sticker down into its own shadow. */
   .sticker-press {
     transition:

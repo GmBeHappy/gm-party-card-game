@@ -80,7 +80,7 @@ export function PlayingCard({
         'sticker relative flex shrink-0 select-none flex-col justify-between bg-face px-1.5 py-1 font-extrabold',
         SIZE[size],
         size === 'xs' ? 'sticker-sm' : 'sticker',
-        interactive ? 'cursor-pointer' : 'cursor-default',
+        interactive ? 'sticker-lift cursor-pointer' : 'cursor-default',
         disabled && 'opacity-40 grayscale',
         selected && 'ring-4 ring-lemon',
         className,
@@ -107,17 +107,45 @@ export function PlayingCard({
   )
 }
 
+/**
+ * The cover. Built like a real card back — an inset frame, a dotted field, and
+ * a medallion — because a flat stripe fill reads as a placeholder, and this is
+ * the single most-repeated object on the table.
+ */
 export function CardBack({ size = 'sm', className }: { size?: CardSize; className?: string }) {
+  const detailed = size !== 'xs'
   return (
     <div
       aria-hidden="true"
       className={cn(
-        'shrink-0 bg-[repeating-linear-gradient(45deg,var(--bubblegum)_0px,var(--bubblegum)_7px,var(--lemon)_7px,var(--lemon)_14px)]',
+        'relative shrink-0 overflow-hidden bg-bubblegum',
         size === 'xs' ? 'sticker-sm' : 'sticker',
         SIZE[size],
         className,
       )}
-    />
+    >
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,var(--lemon)_1.6px,transparent_1.7px)] bg-[length:9px_9px] opacity-80" />
+      {detailed && (
+        <>
+          <div className="absolute inset-[3px] rounded-[inherit] border-2 border-cream/70" />
+          <div className="absolute inset-0 grid place-items-center">
+            <div className="grid size-[56%] place-items-center rounded-full bg-cream ring-2 ring-ink">
+              <Crown className="size-[62%] text-ink" />
+            </div>
+          </div>
+        </>
+      )}
+    </div>
+  )
+}
+
+/** The rank ladder is what the game is about, so the cover wears a crown. */
+function Crown({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor" className={className} aria-hidden="true">
+      <path d="M2.6 6.8 7 10.4l4.3-6.5a.85.85 0 0 1 1.4 0L17 10.4l4.4-3.6c.6-.5 1.5 0 1.3.8l-2.2 8.2a1 1 0 0 1-1 .8H4.5a1 1 0 0 1-1-.8L1.3 7.6c-.2-.8.7-1.3 1.3-.8Z" />
+      <rect x="4.6" y="17.6" width="14.8" height="2.4" rx="1.2" />
+    </svg>
   )
 }
 
