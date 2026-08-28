@@ -35,7 +35,13 @@ export function RoomScreen({ code }: { code: string }) {
     sound.play('error')
   }, [transient])
 
-  if (!hydrated) return <Centered>{null}</Centered>
+  if (!hydrated) {
+    return (
+      <Centered>
+        <Loader2 className="size-7 animate-spin text-primary" />
+      </Centered>
+    )
+  }
 
   if (name === null) {
     return (

@@ -1,5 +1,5 @@
 {
-  "$schema": "https://biomejs.dev/schemas/2.2.0/schema.json",
+  "$schema": "https://biomejs.dev/schemas/2.5.11/schema.json",
   "vcs": { "enabled": true, "clientKind": "git", "useIgnoreFile": true },
   "files": {
     "includes": [
@@ -8,8 +8,8 @@
       "!**/.next",
       "!**/dist",
       "!**/*.css",
-      "!**/public/**",
-      "!apps/web/components/ui/**"
+      "!**/public",
+      "!apps/web/components/ui"
     ]
   },
   "formatter": {
@@ -21,7 +21,7 @@
   "linter": {
     "enabled": true,
     "rules": {
-      "recommended": true,
+      "preset": "recommended",
       "style": {
         "noNonNullAssertion": "off",
         "useImportType": "error"

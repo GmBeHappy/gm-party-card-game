@@ -3,7 +3,21 @@
 import type { Card } from '@slave/game'
 import { motion } from 'motion/react'
 import { PlayingCard } from '@/components/game/playing-card'
-import { cn } from '@/lib/utils'
+
+const container = {
+  hidden: {},
+  shown: { transition: { staggerChildren: 0.035 } },
+}
+
+const dealt = {
+  hidden: { opacity: 0, y: 70, rotate: -6 },
+  shown: {
+    opacity: 1,
+    y: 0,
+    rotate: 0,
+    transition: { type: 'spring' as const, stiffness: 420, damping: 30 },
+  },
+}
 
 export function Hand({
   cards,
@@ -11,32 +25,39 @@ export function Hand({
   playable,
   interactive,
   onToggle,
+  dealKey,
 }: {
   cards: readonly Card[]
   selected: readonly string[]
   playable: readonly string[]
   interactive: boolean
   onToggle: (cardId: string) => void
+  /** Changing this replays the deal animation — pass the round number. */
+  dealKey?: string | number
 }) {
   const playableSet = new Set(playable)
 
   return (
     <div className="-mx-4 overflow-x-auto overflow-y-visible px-4 pt-6 pb-2">
-      <motion.div layout className="flex w-max min-w-full items-end justify-center pl-[26px]">
-        {cards.map((card) => {
-          const disabled = !interactive || !playableSet.has(card.id)
-          return (
-            <div key={card.id} className={cn('-ml-[26px]')}>
-              <PlayingCard
-                card={card}
-                size="md"
-                selected={selected.includes(card.id)}
-                disabled={disabled}
-                onClick={() => onToggle(card.id)}
-              />
-            </div>
-          )
-        })}
+      <motion.div
+        key={dealKey}
+        variants={container}
+        initial="hidden"
+        animate="shown"
+        layout
+        className="flex w-max min-w-full items-end justify-center pl-[26px]"
+      >
+        {cards.map((card) => (
+          <motion.div key={card.id} variants={dealt} className="-ml-[26px]">
+            <PlayingCard
+              card={card}
+              size="md"
+              selected={selected.includes(card.id)}
+              disabled={!interactive || !playableSet.has(card.id)}
+              onClick={() => onToggle(card.id)}
+            />
+          </motion.div>
+        ))}
       </motion.div>
     </div>
   )

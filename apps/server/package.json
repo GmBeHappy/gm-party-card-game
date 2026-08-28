@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "bun --watch src/index.ts",
     "start": "bun src/index.ts",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "bun test --timeout 30000"
   },
   "dependencies": {
     "@elysiajs/cors": "^1.4.0",

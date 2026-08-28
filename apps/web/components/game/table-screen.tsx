@@ -145,6 +145,7 @@ export function TableScreen({
         )}
 
         <Hand
+          dealKey={view.round}
           cards={hand}
           selected={selected}
           playable={you?.playable ?? []}

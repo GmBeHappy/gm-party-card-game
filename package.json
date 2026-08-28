@@ -11,13 +11,13 @@
     "dev:web": "bun run --cwd apps/web dev",
     "dev:server": "bun run --cwd apps/server dev",
     "build": "bun run --cwd apps/web build",
-    "test": "bun run --cwd packages/game test",
+    "test": "bun run --cwd packages/game test && bun run --cwd apps/server test",
     "check": "biome check .",
     "check:fix": "biome check --write .",
     "typecheck": "bun run --filter '*' typecheck"
   },
   "devDependencies": {
-    "@biomejs/biome": "^2.2.0",
+    "@biomejs/biome": "^2.5.11",
     "typescript": "^5.9.2",
     "vitest": "^3.2.4",
     "@types/bun": "latest"

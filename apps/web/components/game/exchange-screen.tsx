@@ -106,6 +106,7 @@ export function ExchangeScreen({ view, actions }: { view: RoomView; actions: Roo
             {give === 1 ? '' : 's'} to send back.
           </p>
           <Hand
+            dealKey={`exchange-${view.round}`}
             cards={hand}
             selected={selected}
             playable={hand.map((card) => card.id)}

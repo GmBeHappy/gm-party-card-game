@@ -25,7 +25,7 @@ import {
   type SettingsPatch,
 } from '@slave/shared'
 import { generatePlayerId } from './codes'
-import { BOT_DELAY_MS, DISCONNECTED_TURN_MS } from './config'
+import { timings } from './config'
 
 export interface Socket {
   send(data: string): void
@@ -408,7 +408,7 @@ export function scheduleTimers(room: Room, onChange: (events: readonly GameEvent
     if (botTurn !== undefined) {
       room.botTimer = setTimeout(
         () => run(chooseBotExchange(state, botTurn.from, botTurn.count)),
-        BOT_DELAY_MS,
+        timings.botDelayMs,
       )
       return
     }
@@ -425,14 +425,19 @@ export function scheduleTimers(room: Room, onChange: (events: readonly GameEvent
 
   const member = findMember(room, state.currentPlayer)
   if (member?.isBot === true) {
-    room.botTimer = setTimeout(() => run(chooseBotAction(room.state, member.id)), BOT_DELAY_MS)
+    room.botTimer = setTimeout(
+      () => run(chooseBotAction(room.state, member.id)),
+      timings.botDelayMs,
+    )
     return
   }
 
   const deadlines: number[] = []
   if (state.turnDeadline !== null) deadlines.push(state.turnDeadline)
   // An absent player resolves quickly, even in a room with the clock switched off.
-  if (member !== undefined && !isConnected(member)) deadlines.push(now + DISCONNECTED_TURN_MS)
+  if (member !== undefined && !isConnected(member)) {
+    deadlines.push(now + timings.disconnectedTurnMs)
+  }
   if (deadlines.length === 0) return
 
   const at = Math.min(...deadlines)
