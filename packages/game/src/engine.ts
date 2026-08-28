@@ -92,6 +92,28 @@ export function createInitialState(
   }
 }
 
+/**
+ * Replace the seated players — used for lobby changes (adding a bot, kicking,
+ * shuffling seats) and for seating people who joined while a match was running.
+ * Only safe between rounds, which the caller enforces.
+ */
+export function seatPlayers(state: GameState, players: readonly Player[]): GameState {
+  const scores: Record<PlayerId, number> = {}
+  for (const player of players) scores[player.id] = state.scores[player.id] ?? 0
+  return { ...state, players: [...players], scores, version: state.version + 1 }
+}
+
+/** Mark a seat connected or not without touching anything else. */
+export function setConnected(state: GameState, playerId: PlayerId, connected: boolean): GameState {
+  return {
+    ...state,
+    players: state.players.map((player) =>
+      player.id === playerId ? { ...player, connected } : player,
+    ),
+    version: state.version + 1,
+  }
+}
+
 // ---------------------------------------------------------------- turn order
 
 function seatIds(state: GameState): PlayerId[] {

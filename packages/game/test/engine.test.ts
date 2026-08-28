@@ -8,6 +8,8 @@ import {
   handCounts,
   playableCardIds,
   reduce,
+  seatPlayers,
+  setConnected,
 } from '../src/index'
 import { DEFAULT_SETTINGS } from '../src/types'
 import { cards, ctx, ids, makePlayers, playingState } from './helpers'
@@ -482,5 +484,35 @@ describe('client-facing queries', () => {
     state = unwrap(reduce(state, { type: 'play', playerId: 'p1', cardIds: ['15C'] }, ctx()))
     expect(playableCardIds(state, 'p2')).toEqual(new Set())
     expect(canPass(state, 'p2')).toBe(true)
+  })
+})
+
+describe('seat management', () => {
+  it('reseats players and keeps existing scores', () => {
+    const state = playingState({ p1: cards('4C'), p2: cards('5C'), p3: cards('6C') })
+    const scored = { ...state, scores: { p1: 5, p2: 2, p3: 0 } }
+    const next = seatPlayers(scored, [
+      ...scored.players,
+      { id: 'p4', name: 'Late', isBot: false, connected: true },
+    ])
+    expect(next.players.map((player) => player.id)).toEqual(['p1', 'p2', 'p3', 'p4'])
+    expect(next.scores).toEqual({ p1: 5, p2: 2, p3: 0, p4: 0 })
+  })
+
+  it('drops scores for players who leave', () => {
+    const state = playingState({ p1: cards('4C'), p2: cards('5C'), p3: cards('6C') })
+    const next = seatPlayers(
+      { ...state, scores: { p1: 5, p2: 2, p3: 1 } },
+      state.players.slice(0, 2),
+    )
+    expect(next.scores).toEqual({ p1: 5, p2: 2 })
+  })
+
+  it('flips a connection flag without disturbing the round', () => {
+    const state = playingState({ p1: cards('4C'), p2: cards('5C'), p3: cards('6C') })
+    const next = setConnected(state, 'p2', false)
+    expect(next.players.find((player) => player.id === 'p2')?.connected).toBe(false)
+    expect(next.currentPlayer).toBe(state.currentPlayer)
+    expect(next.hands).toEqual(state.hands)
   })
 })
