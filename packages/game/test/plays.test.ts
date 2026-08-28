@@ -35,14 +35,6 @@ describe('classifyPlay', () => {
     expect(classifyPlay(cards('3C', '4D'))).toEqual({ ok: false, error: 'mixed-ranks' })
   })
 
-  it('rejects a joker mixed with natural cards — no wildcards', () => {
-    expect(classifyPlay(cards('JKR1', '3C'))).toEqual({ ok: false, error: 'joker-mixed' })
-  })
-
-  it('accepts two jokers as a pair', () => {
-    expect(play('JKR1', 'JKR2').kind).toBe('pair')
-  })
-
   it('rejects duplicate cards', () => {
     expect(classifyPlay([c('3C'), c('3C')])).toEqual({ ok: false, error: 'duplicate-cards' })
   })
@@ -55,59 +47,46 @@ describe('classifyPlay', () => {
 
 describe('canBeat — normal order', () => {
   it('lets any shape lead an open trick', () => {
-    expect(canBeat(play('3C'), null, false, S)).toBe(true)
-    expect(canBeat(play('3C', '3D'), null, false, S)).toBe(true)
+    expect(canBeat(play('3C'), null, false)).toBe(true)
+    expect(canBeat(play('3C', '3D'), null, false)).toBe(true)
   })
 
   it('requires a matching shape', () => {
-    expect(canBeat(play('15C'), play('3C', '3D'), false, S)).toBe(false)
-    expect(canBeat(play('15C', '15D'), play('3C'), false, S)).toBe(false)
+    expect(canBeat(play('15C'), play('3C', '3D'), false)).toBe(false)
+    expect(canBeat(play('15C', '15D'), play('3C'), false)).toBe(false)
   })
 
   it('requires a strictly higher rank', () => {
-    expect(canBeat(play('4C'), play('3C'), false, S)).toBe(true)
-    expect(canBeat(play('3H'), play('3C'), false, S)).toBe(false)
-    expect(canBeat(play('3C'), play('4C'), false, S)).toBe(false)
+    expect(canBeat(play('4C'), play('3C'), false)).toBe(true)
+    expect(canBeat(play('3H'), play('3C'), false)).toBe(false)
+    expect(canBeat(play('3C'), play('4C'), false)).toBe(false)
   })
 
-  it('ranks the 2 above the ace and the joker above the 2', () => {
-    expect(canBeat(play('15C'), play('14C'), false, S)).toBe(true)
-    expect(canBeat(play('JKR1'), play('15C'), false, S)).toBe(true)
+  it('ranks the 2 above the ace', () => {
+    expect(canBeat(play('15C'), play('14C'), false)).toBe(true)
+    expect(canBeat(play('14C'), play('15C'), false)).toBe(false)
+  })
+
+  it('compares pairs by rank, ignoring suit', () => {
+    expect(canBeat(play('9C', '9D'), play('8H', '8S'), false)).toBe(true)
+    expect(canBeat(play('8C', '8D'), play('8H', '8S'), false)).toBe(false)
   })
 })
 
 describe('canBeat — revolution', () => {
   it('inverts natural ranks', () => {
-    expect(canBeat(play('3C'), play('15D'), true, S)).toBe(true)
-    expect(canBeat(play('15C'), play('3D'), true, S)).toBe(false)
+    expect(canBeat(play('3C'), play('15D'), true)).toBe(true)
+    expect(canBeat(play('15C'), play('3D'), true)).toBe(false)
   })
 
-  it('keeps the joker strongest in both directions', () => {
-    expect(canBeat(play('JKR1'), play('3C'), true, S)).toBe(true)
-    expect(canBeat(play('3C'), play('JKR1'), true, off({ spadeThreeBeatsJoker: false }))).toBe(
-      false,
-    )
-  })
-})
-
-describe('spade three beats joker', () => {
-  it('lets a lone ♠3 answer a lone joker', () => {
-    expect(canBeat(play('3S'), play('JKR1'), false, S)).toBe(true)
-    expect(canBeat(play('3S'), play('JKR1'), true, S)).toBe(true)
+  it('makes the 3 the strongest card and the 2 the weakest', () => {
+    expect(canBeat(play('3C'), play('4D'), true)).toBe(true)
+    expect(canBeat(play('15C'), play('14D'), true)).toBe(false)
   })
 
-  it('does not apply to other threes', () => {
-    expect(canBeat(play('3H'), play('JKR1'), false, S)).toBe(false)
-  })
-
-  it('does not apply to a pair of jokers', () => {
-    expect(canBeat(play('3S', '3H'), play('JKR1', 'JKR2'), false, S)).toBe(false)
-  })
-
-  it('is off when the room setting is off', () => {
-    expect(canBeat(play('3S'), play('JKR1'), false, off({ spadeThreeBeatsJoker: false }))).toBe(
-      false,
-    )
+  it('inverts pairs as well as singles', () => {
+    expect(canBeat(play('4C', '4D'), play('9H', '9S'), true)).toBe(true)
+    expect(canBeat(play('9C', '9D'), play('4H', '4S'), true)).toBe(false)
   })
 })
 
@@ -135,7 +114,7 @@ describe('revolution trigger', () => {
 describe('legalPlays', () => {
   it('offers every shape when leading', () => {
     const hand = cards('3C', '3D', '4H')
-    const kinds = legalPlays(hand, null, false, S).map((p) => `${p.kind}:${p.rank}`)
+    const kinds = legalPlays(hand, null, false).map((p) => `${p.kind}:${p.rank}`)
     expect(kinds).toContain('single:3')
     expect(kinds).toContain('pair:3')
     expect(kinds).toContain('single:4')
@@ -143,18 +122,19 @@ describe('legalPlays', () => {
 
   it('offers only matching, higher shapes when following', () => {
     const hand = cards('3C', '3D', '5H', '5S', '15C')
-    const options = legalPlays(hand, play('4C', '4D'), false, S)
+    const options = legalPlays(hand, play('4C', '4D'), false)
     expect(options.map((p) => p.rank)).toEqual([5])
   })
 
   it('reports when a hand is stuck', () => {
     const hand = cards('3C', '3D')
-    expect(hasLegalPlay(hand, play('15C'), false, S)).toBe(false)
-    expect(hasLegalPlay(hand, play('15C', '15D'), false, S)).toBe(false)
+    expect(hasLegalPlay(hand, play('15C'), false)).toBe(false)
+    expect(hasLegalPlay(hand, play('15C', '15D'), false)).toBe(false)
   })
 
-  it('surfaces the ♠3 answer to a lone joker', () => {
-    const options = legalPlays(cards('3S', '4C'), play('JKR1'), false, S)
-    expect(options.map((p) => p.cards[0]?.id)).toEqual(['3S'])
+  it('inverts which plays are offered under revolution', () => {
+    const hand = cards('4C', '14C')
+    expect(legalPlays(hand, play('9H'), false).map((p) => p.rank)).toEqual([14])
+    expect(legalPlays(hand, play('9H'), true).map((p) => p.rank)).toEqual([4])
   })
 })

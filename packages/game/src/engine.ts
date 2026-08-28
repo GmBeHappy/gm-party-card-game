@@ -1,4 +1,4 @@
-import { createDeck, deal, isJoker, shuffle, sortHand } from './cards'
+import { createDeck, deal, shuffle, sortHand } from './cards'
 import { applyTransfer, buildTransfers, pendingTransfers, weakestCards } from './exchange'
 import { canBeat, classifyPlay, isEightCut, isRevolutionPlay, legalPlays } from './plays'
 import type { Rng } from './rng'
@@ -288,7 +288,7 @@ function doPlay(
   if (!classified.ok) return fail('invalid-play')
   const play = classified.play
 
-  if (!canBeat(play, state.trick.current, state.revolution, state.settings)) {
+  if (!canBeat(play, state.trick.current, state.revolution)) {
     return fail('cannot-beat')
   }
 
@@ -484,7 +484,7 @@ export function reduce(state: GameState, action: Action, ctx: EngineContext): Ac
 export function playableCardIds(state: GameState, playerId: PlayerId): Set<string> {
   if (state.phase !== 'playing' || state.currentPlayer !== playerId) return new Set()
   const hand = state.hands[playerId] ?? []
-  const plays = legalPlays(hand, state.trick.current, state.revolution, state.settings)
+  const plays = legalPlays(hand, state.trick.current, state.revolution)
   const ids = new Set<string>()
   for (const play of plays) {
     for (const card of play.cards) ids.add(card.id)
@@ -503,5 +503,3 @@ export function handCounts(state: GameState): Record<PlayerId, number> {
   for (const player of state.players) counts[player.id] = (state.hands[player.id] ?? []).length
   return counts
 }
-
-export { isJoker }

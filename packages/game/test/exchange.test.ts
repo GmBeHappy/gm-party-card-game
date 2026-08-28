@@ -10,13 +10,13 @@ import { assignRoles } from '../src/roles'
 import { cards, ids } from './helpers'
 
 describe('card picking', () => {
-  it('takes the strongest cards from a slave, joker first', () => {
-    const hand = cards('3C', '15D', 'JKR1', '9H')
-    expect(ids(strongestCards(hand, 2))).toEqual(['JKR1', '15D'])
+  it('takes the strongest cards from a slave, twos first', () => {
+    const hand = cards('3C', '15D', '14S', '9H')
+    expect(ids(strongestCards(hand, 2))).toEqual(['15D', '14S'])
   })
 
   it('auto-sends the weakest cards for a stalled president', () => {
-    const hand = cards('3C', '15D', 'JKR1', '9H')
+    const hand = cards('3C', '15D', '14S', '9H')
     expect(ids(weakestCards(hand, 2))).toEqual(['3C', '9H'])
   })
 })
@@ -27,14 +27,14 @@ describe('buildTransfers', () => {
     const transfers = buildTransfers(roles, {
       a: cards('4C', '5C'),
       b: cards('6C', '7C'),
-      c: cards('3C', '15D', 'JKR1'),
+      c: cards('3C', '15D', '14S'),
     })
     expect(transfers).toHaveLength(2)
 
     const fromSlave = transfers.find((t) => t.from === 'c')
     expect(fromSlave?.forced).toBe(true)
     expect(fromSlave?.count).toBe(2)
-    expect(ids(fromSlave?.cards ?? [])).toEqual(['JKR1', '15D'])
+    expect(ids(fromSlave?.cards ?? [])).toEqual(['15D', '14S'])
 
     const fromPresident = transfers.find((t) => t.from === 'a')
     expect(fromPresident?.forced).toBe(false)

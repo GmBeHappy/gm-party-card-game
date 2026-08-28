@@ -1,12 +1,5 @@
-import { isJoker, isSpadeThree, strength } from './cards'
-import {
-  type Card,
-  EIGHT_RANK,
-  JOKER_RANK,
-  type Play,
-  type PlayKind,
-  type RoomSettings,
-} from './types'
+import { strength } from './cards'
+import { type Card, EIGHT_RANK, type Play, type PlayKind, type RoomSettings } from './types'
 
 const KINDS: Readonly<Record<number, PlayKind>> = {
   1: 'single',
@@ -15,7 +8,7 @@ const KINDS: Readonly<Record<number, PlayKind>> = {
   4: 'quad',
 }
 
-export type PlayError = 'empty' | 'too-many' | 'mixed-ranks' | 'joker-mixed' | 'duplicate-cards'
+export type PlayError = 'empty' | 'too-many' | 'mixed-ranks' | 'duplicate-cards'
 
 export type ClassifyResult =
   | { readonly ok: true; readonly play: Play }
@@ -24,9 +17,8 @@ export type ClassifyResult =
 /**
  * Validate a set of cards as a playable shape.
  *
- * Shapes are 1–4 cards of a single rank. Jokers are their own rank: two Jokers
- * form the strongest pair, but a Joker never substitutes for a natural card
- * (no wildcards), which keeps every play unambiguous to compare and to select.
+ * Shapes are 1–4 cards of a single rank, which keeps every play unambiguous
+ * both to compare and to select in the UI.
  */
 export function classifyPlay(cards: readonly Card[]): ClassifyResult {
   if (cards.length === 0) return { ok: false, error: 'empty' }
@@ -37,9 +29,6 @@ export function classifyPlay(cards: readonly Card[]): ClassifyResult {
 
   const first = cards[0]
   if (first === undefined) return { ok: false, error: 'empty' }
-
-  const jokers = cards.filter(isJoker).length
-  if (jokers > 0 && jokers !== cards.length) return { ok: false, error: 'joker-mixed' }
 
   if (!cards.every((c) => c.rank === first.rank)) return { ok: false, error: 'mixed-ranks' }
 
@@ -56,33 +45,14 @@ export function playStrength(play: Play, revolution: boolean): number {
   return strength(card, revolution)
 }
 
-function isLoneJoker(play: Play): boolean {
-  return play.count === 1 && play.rank === JOKER_RANK
-}
-
-function isLoneSpadeThree(play: Play): boolean {
-  const card = play.cards[0]
-  return play.count === 1 && card !== undefined && isSpadeThree(card)
-}
-
 /**
  * Can `candidate` legally be played on top of `current`?
  *
  * A null `current` means the trick is open and any valid shape leads.
  */
-export function canBeat(
-  candidate: Play,
-  current: Play | null,
-  revolution: boolean,
-  settings: RoomSettings,
-): boolean {
+export function canBeat(candidate: Play, current: Play | null, revolution: boolean): boolean {
   if (current === null) return true
   if (candidate.count !== current.count) return false
-
-  // ♠3 is the one answer to a lone Joker, in both directions of revolution.
-  if (settings.spadeThreeBeatsJoker && isLoneJoker(current) && isLoneSpadeThree(candidate)) {
-    return true
-  }
 
   return playStrength(candidate, revolution) > playStrength(current, revolution)
 }
@@ -102,7 +72,6 @@ export function legalPlays(
   hand: readonly Card[],
   current: Play | null,
   revolution: boolean,
-  settings: RoomSettings,
 ): Play[] {
   const byRank = new Map<number, Card[]>()
   for (const card of hand) {
@@ -118,7 +87,7 @@ export function legalPlays(
     for (let n = 1; n <= size; n++) {
       if (wanted !== null && n !== wanted) continue
       const result = classifyPlay(group.slice(0, n))
-      if (result.ok && canBeat(result.play, current, revolution, settings)) out.push(result.play)
+      if (result.ok && canBeat(result.play, current, revolution)) out.push(result.play)
     }
   }
   return out
@@ -129,7 +98,6 @@ export function hasLegalPlay(
   hand: readonly Card[],
   current: Play | null,
   revolution: boolean,
-  settings: RoomSettings,
 ): boolean {
-  return legalPlays(hand, current, revolution, settings).length > 0
+  return legalPlays(hand, current, revolution).length > 0
 }

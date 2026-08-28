@@ -35,8 +35,8 @@ describe('starting a match', () => {
     const state = unwrap(reduce(createInitialState(makePlayers(4)), { type: 'startMatch' }, ctx()))
     expect(state.phase).toBe('playing')
     expect(state.round).toBe(1)
-    expect(Object.values(state.hands).flat()).toHaveLength(54)
-    expect(Object.values(handCounts(state))).toEqual([14, 14, 13, 13])
+    expect(Object.values(state.hands).flat()).toHaveLength(52)
+    expect(Object.values(handCounts(state))).toEqual([13, 13, 13, 13])
   })
 
   it('gives the first lead to whoever holds the three of diamonds', () => {
@@ -336,7 +336,7 @@ describe('the exchange phase', () => {
     expect(fromSlave?.forced).toBe(true)
     expect(fromSlave?.cards).toHaveLength(2)
     // The slave is two cards down; the president is two cards up.
-    expect((state.hands.p3 ?? []).length).toBe(16)
+    expect((state.hands.p3 ?? []).length).toBe(15)
     expect((state.hands.p1 ?? []).length).toBe(20)
   })
 
@@ -375,7 +375,7 @@ describe('the exchange phase', () => {
     expect(next.phase).toBe('playing')
     expect(next.currentPlayer).toBe('p3')
     expect(next.exchange).toBeNull()
-    expect(Object.values(handCounts(next))).toEqual([18, 18, 18])
+    expect(Object.values(handCounts(next))).toEqual([18, 17, 17])
     expect((next.hands.p3 ?? []).map((card) => card.id)).toEqual(expect.arrayContaining(give))
   })
 

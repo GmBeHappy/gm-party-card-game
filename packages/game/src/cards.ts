@@ -1,5 +1,5 @@
 import type { Rng } from './rng'
-import { type Card, type CardRank, JOKER_RANK, NATURAL_RANKS, SUITS, type Suit } from './types'
+import { type Card, type CardRank, RANKS, SUITS } from './types'
 
 const RANK_LABELS: Readonly<Record<number, string>> = {
   11: 'J',
@@ -7,31 +7,24 @@ const RANK_LABELS: Readonly<Record<number, string>> = {
   13: 'K',
   14: 'A',
   15: '2',
-  16: 'JOKER',
 }
 
 export function rankLabel(rank: CardRank): string {
   return RANK_LABELS[rank] ?? String(rank)
 }
 
-export function isJoker(card: Card): boolean {
-  return card.rank === JOKER_RANK
-}
-
 export function cardLabel(card: Card): string {
-  return isJoker(card) ? 'JOKER' : `${rankLabel(card.rank)}${card.suit}`
+  return `${rankLabel(card.rank)}${card.suit}`
 }
 
-/** A fresh 54-card deck: 52 suited cards plus two Jokers, in canonical order. */
+/** A fresh 52-card deck in canonical order. No Jokers. */
 export function createDeck(): Card[] {
   const deck: Card[] = []
-  for (const rank of NATURAL_RANKS) {
+  for (const rank of RANKS) {
     for (const suit of SUITS) {
       deck.push({ id: `${rank}${suit}`, rank, suit })
     }
   }
-  deck.push({ id: 'JKR1', rank: JOKER_RANK, suit: null })
-  deck.push({ id: 'JKR2', rank: JOKER_RANK, suit: null })
   return deck
 }
 
@@ -62,12 +55,8 @@ export function deal(deck: readonly Card[], playerCount: number): Card[][] {
   return hands
 }
 
-/**
- * Effective strength under the current revolution state. The Joker sits above
- * every natural rank in both directions — revolution never demotes it.
- */
+/** Effective strength under the current revolution state. */
 export function strength(card: Card, revolution: boolean): number {
-  if (isJoker(card)) return 100
   return revolution ? -card.rank : card.rank
 }
 
@@ -76,10 +65,6 @@ export function sortHand(cards: readonly Card[], revolution = false): Card[] {
   return [...cards].sort((a, b) => {
     const diff = strength(a, revolution) - strength(b, revolution)
     if (diff !== 0) return diff
-    return SUITS.indexOf(a.suit as Suit) - SUITS.indexOf(b.suit as Suit)
+    return SUITS.indexOf(a.suit) - SUITS.indexOf(b.suit)
   })
-}
-
-export function isSpadeThree(card: Card): boolean {
-  return card.rank === 3 && card.suit === 'S'
 }

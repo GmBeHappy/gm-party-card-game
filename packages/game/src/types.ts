@@ -4,27 +4,23 @@ export type Suit = 'C' | 'D' | 'H' | 'S'
 export const SUITS: readonly Suit[] = ['C', 'D', 'H', 'S'] as const
 
 /**
- * Numeric card ranks. 3 is the weakest natural card, 15 is the `2`,
- * and 16 is the Joker. Using numbers keeps comparison arithmetic trivial.
+ * Numeric card ranks. 3 is the weakest card and 15 is the `2`, the strongest.
+ * Using numbers keeps comparison arithmetic trivial. This deck has no Jokers.
  */
-export type CardRank = 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16
+export type CardRank = 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15
 
-export const JOKER_RANK = 16 as const
 export const TWO_RANK = 15 as const
 export const EIGHT_RANK = 8 as const
 export const THREE_RANK = 3 as const
 
-/** Ranks that appear on a physical suited card, weakest first. */
-export const NATURAL_RANKS: readonly CardRank[] = [
-  3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15,
-] as const
+/** Every rank in the deck, weakest first. */
+export const RANKS: readonly CardRank[] = [3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15] as const
 
 export interface Card {
-  /** Stable identity, unique within a deck: `3S`, `10H`, `JKR1`. */
+  /** Stable identity, unique within a deck: `3S`, `10H`. */
   readonly id: string
   readonly rank: CardRank
-  /** `null` only for Jokers. */
-  readonly suit: Suit | null
+  readonly suit: Suit
 }
 
 export type PlayKind = 'single' | 'pair' | 'triple' | 'quad'
@@ -46,8 +42,6 @@ export interface RoomSettings {
   readonly eightCut: boolean
   /** A four-of-a-kind inverts rank order for the rest of the round. */
   readonly revolution: boolean
-  /** A lone ♠3 defeats a lone Joker. */
-  readonly spadeThreeBeatsJoker: boolean
   /** Seconds per turn; `null` disables the timer. */
   readonly turnSeconds: number | null
   /** Rounds in the match; `null` means endless (host ends it). */
@@ -57,7 +51,6 @@ export interface RoomSettings {
 export const DEFAULT_SETTINGS: RoomSettings = {
   eightCut: true,
   revolution: true,
-  spadeThreeBeatsJoker: true,
   turnSeconds: 30,
   totalRounds: 5,
 }

@@ -12,7 +12,7 @@ import {
 
 const DECK = createDeck()
 
-/** Look a card up by id: `c('3S')`, `c('10H')`, `c('JKR1')`. */
+/** Look a card up by id: `c('3S')`, `c('10H')`, `c('15D')` (the 2 of diamonds). */
 export function c(id: string): Card {
   const card = DECK.find((card) => card.id === id)
   if (card === undefined) throw new Error(`no such card: ${id}`)
