@@ -56,7 +56,7 @@ export interface Room {
 
 export type RoomResult<T = undefined> = { ok: true; value: T } | { ok: false; code: ErrorCode }
 
-const BOT_NAMES = ['Ada', 'Rin', 'Kai', 'Mei', 'Otto', 'Zara'] as const
+const BOT_NAMES = ['หมี', 'แมว', 'กระต่าย', 'หมา', 'นก', 'ปลา'] as const
 
 export function createRoom(code: string, settings: RoomSettings): Room {
   const now = Date.now()
@@ -263,10 +263,10 @@ export function addBot(room: Room, playerId: PlayerId): RoomResult {
   if (seated(room).length >= MAX_PLAYERS) return { ok: false, code: 'room-full' }
 
   const used = new Set(room.members.map((member) => member.name))
-  const name = BOT_NAMES.find((candidate) => !used.has(`Bot ${candidate}`)) ?? 'Bot'
+  const name = BOT_NAMES.find((candidate) => !used.has(`บอท${candidate}`)) ?? 'บอท'
   room.members.push({
     id: generatePlayerId(),
-    name: uniqueName(room, `Bot ${name}`),
+    name: uniqueName(room, `บอท${name}`),
     isBot: true,
     ready: true,
     seated: true,

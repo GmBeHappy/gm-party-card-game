@@ -82,13 +82,11 @@ export function TableScreen({
     <div className="table-felt flex min-h-dvh flex-col">
       <TableFlash flash={flash} />
 
-      <header className="flex items-center justify-between gap-2 border-white/5 border-b px-3 py-2">
+      <header className="flex items-center justify-between gap-2 border-ink border-b-[3px] bg-cream px-3 py-2">
         <div className="flex items-baseline gap-2">
-          <span className="font-mono text-muted-foreground text-xs tracking-widest">
-            {view.code}
-          </span>
-          <span className="text-muted-foreground text-xs">
-            Round {view.round}
+          <span className="tabular text-ink text-sm tracking-widest">{view.code}</span>
+          <span className="font-semibold text-ink/70 text-xs">
+            รอบ {view.round}
             {view.settings.totalRounds !== null && ` / ${view.settings.totalRounds}`}
           </span>
         </div>
@@ -98,9 +96,9 @@ export function TableScreen({
               layout
               initial={{ scale: 0.8, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
-              className="rounded-full bg-suit-heart/20 px-2 py-0.5 font-semibold text-[10px] text-suit-heart uppercase tracking-wider ring-1 ring-suit-heart/40"
+              className="sticker-sm rounded-full bg-bubblegum px-2 py-0.5 font-extrabold text-[10px] text-ink uppercase tracking-wider"
             >
-              Revolution
+              ปฏิวัติ
             </motion.span>
           )}
           <SoundControls />
@@ -123,12 +121,12 @@ export function TableScreen({
         <TrickPile cards={view.trick.cards} leaderName={leaderName} revolution={view.revolution} />
       </section>
 
-      <footer className="space-y-2 border-white/5 border-t bg-background/40 px-4 pt-2 pb-safe backdrop-blur">
+      <footer className="space-y-2 border-ink border-t-[3px] bg-cream px-4 pt-2 pb-safe">
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-2">
             {mySeat?.role != null && <RoleBadge role={mySeat.role} />}
-            <span className="text-muted-foreground text-xs">
-              {hand.length} card{hand.length === 1 ? '' : 's'}
+            <span className="font-semibold text-ink/70 text-xs">
+              เหลือ <span className="tabular">{hand.length}</span> ใบ
             </span>
           </div>
           <span
@@ -139,8 +137,8 @@ export function TableScreen({
         </div>
 
         {stuck && (
-          <p className="rounded-lg bg-white/5 px-3 py-1.5 text-center text-muted-foreground text-xs">
-            Nothing in your hand beats that — you can only pass.
+          <p className="sticker-sm rounded-xl bg-cream px-3 py-1.5 text-center font-semibold text-ink text-xs">
+            ไม่มีไพ่ในมือที่กินได้ ต้องผ่านอย่างเดียว
           </p>
         )}
 
@@ -168,7 +166,7 @@ export function TableScreen({
               actions.pass()
             }}
           >
-            Pass
+            ผ่าน
           </Button>
           <Button
             className="flex-[2]"
@@ -179,7 +177,7 @@ export function TableScreen({
               setSelected([])
             }}
           >
-            {selected.length > 0 ? `Play ${selected.length}` : 'Play'}
+            {selected.length > 0 ? `ลง ${selected.length} ใบ` : 'ลงไพ่'}
           </Button>
         </div>
       </footer>
@@ -188,8 +186,8 @@ export function TableScreen({
 }
 
 function turnLabel(view: RoomView, myTurn: boolean): string {
-  if (myTurn) return view.trick.cards === null ? 'Your lead' : 'Your turn'
+  if (myTurn) return view.trick.cards === null ? 'คุณเป็นคนนำ' : 'ตาคุณแล้ว'
   const current = view.seats.find((seat) => seat.id === view.currentPlayerId)
   if (current === undefined) return ''
-  return current.connected ? `${current.name}'s turn` : `${current.name} is away…`
+  return current.connected ? `ตาของ ${current.name}` : `${current.name} หลุดอยู่…`
 }

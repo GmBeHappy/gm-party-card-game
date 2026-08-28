@@ -11,7 +11,7 @@ function hash(value: string): number {
   return h >>> 0
 }
 
-/** A deterministic 5×5 mirrored avatar, so every seat is recognisable at a glance. */
+/** A deterministic 5×5 mirrored avatar in candy pastels — one glance per seat. */
 export function Identicon({ seed, className }: { seed: string; className?: string }) {
   const h = hash(seed)
   const hue = h % 360
@@ -23,16 +23,16 @@ export function Identicon({ seed, className }: { seed: string; className?: strin
       viewBox="0 0 5 5"
       className={cn('size-full', className)}
       role="img"
-      aria-label="player avatar"
+      aria-label="รูปประจำตัวผู้เล่น"
     >
-      <rect width="5" height="5" fill={`oklch(0.24 0.05 ${hue})`} />
+      <rect width="5" height="5" fill={`oklch(0.95 0.055 ${hue})`} />
       {cells.map((on, index) => {
         if (!on) return null
         const column = Math.floor(index / 5)
         const row = index % 5
         return (
           // biome-ignore lint/suspicious/noArrayIndexKey: fixed 15-cell grid, never reordered
-          <g key={`cell-${index}`} fill={`oklch(0.72 0.17 ${hue})`}>
+          <g key={`cell-${index}`} fill={`oklch(0.68 0.19 ${hue})`}>
             <rect x={column} y={row} width="1" height="1" />
             <rect x={4 - column} y={row} width="1" height="1" />
           </g>

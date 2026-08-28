@@ -4,6 +4,13 @@ import type { Card } from '@slave/game'
 import { motion } from 'motion/react'
 import { PlayingCard } from '@/components/game/playing-card'
 
+/** Spread the fan across roughly 10 degrees, whatever the hand size. */
+function fanAngle(index: number, total: number): number {
+  if (total < 2) return 0
+  const middle = (total - 1) / 2
+  return ((index - middle) / middle) * 5
+}
+
 const container = {
   hidden: {},
   shown: { transition: { staggerChildren: 0.035 } },
@@ -47,8 +54,13 @@ export function Hand({
         layout
         className="flex w-max min-w-full items-end justify-center pl-[26px]"
       >
-        {cards.map((card) => (
-          <motion.div key={card.id} variants={dealt} className="-ml-[26px]">
+        {cards.map((card, index) => (
+          <motion.div
+            key={card.id}
+            variants={dealt}
+            className="-ml-[26px]"
+            style={{ rotate: fanAngle(index, cards.length) }}
+          >
             <PlayingCard
               card={card}
               size="md"

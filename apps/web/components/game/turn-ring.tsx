@@ -21,19 +21,19 @@ export function TurnRing({
       className={cn('-rotate-90 pointer-events-none absolute inset-0 size-full', className)}
       aria-hidden="true"
     >
-      <circle cx="50" cy="50" r={radius} fill="none" strokeWidth="4" className="stroke-white/10" />
+      <circle cx="50" cy="50" r={radius} fill="none" strokeWidth="4" className="stroke-ink/15" />
       <circle
         cx="50"
         cy="50"
         r={radius}
         fill="none"
-        strokeWidth="4"
+        strokeWidth="6"
         strokeLinecap="round"
         strokeDasharray={circumference}
         strokeDashoffset={circumference * (1 - Math.max(0, Math.min(1, progress)))}
         className={cn(
           'transition-[stroke-dashoffset] duration-100 ease-linear',
-          urgent ? 'stroke-destructive' : 'stroke-primary',
+          urgent ? 'stroke-destructive' : 'stroke-lemon',
         )}
       />
     </svg>

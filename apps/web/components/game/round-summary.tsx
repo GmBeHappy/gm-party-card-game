@@ -24,18 +24,18 @@ export function RoundSummary({ view, actions }: { view: RoomView; actions: RoomA
       >
         {isMatchEnd ? (
           <>
-            <Trophy className="mx-auto size-8 text-suit-diamond" />
-            <h1 className="mt-2 font-bold text-3xl">Match over</h1>
-            <p className="text-muted-foreground text-sm">
-              {view.history.length} round{view.history.length === 1 ? '' : 's'} played
-            </p>
+            <Trophy className="mx-auto size-10 fill-lemon text-ink" />
+            <h1 className="ink-edge mt-2 font-display text-5xl text-lemon drop-shadow-[5px_5px_0_var(--ink)]">
+              จบเกมแล้ว
+            </h1>
+            <p className="font-bold text-ink/70 text-sm">เล่นไปทั้งหมด {view.history.length} รอบ</p>
           </>
         ) : (
           <>
-            <p className="text-muted-foreground text-xs uppercase tracking-widest">
-              Round {view.round} complete
+            <p className="font-extrabold text-ink/70 text-xs uppercase tracking-widest">
+              จบรอบ {view.round}
             </p>
-            <h1 className="mt-1 font-bold text-3xl">Standings</h1>
+            <h1 className="mt-1 font-extrabold text-3xl">ตารางคะแนน</h1>
           </>
         )}
       </motion.header>
@@ -53,18 +53,16 @@ export function RoundSummary({ view, actions }: { view: RoomView; actions: RoomA
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: index * 0.06 }}
               className={cn(
-                'flex items-center gap-3 rounded-xl border border-white/10 bg-card/60 p-3',
-                index === 0 && isMatchEnd && 'border-suit-diamond/50 bg-suit-diamond/10',
+                'sticker flex items-center gap-3 rounded-2xl p-3',
+                index === 0 ? 'bg-lemon' : 'bg-card',
               )}
             >
-              <span className="w-5 text-center font-bold font-mono text-muted-foreground">
-                {index + 1}
-              </span>
-              <div className="size-9 overflow-hidden rounded-full ring-1 ring-white/15">
+              <span className="tabular w-5 text-center text-ink/60">{index + 1}</span>
+              <div className="sticker-sm size-10 shrink-0 overflow-hidden rounded-full">
                 <Identicon seed={seat.id} />
               </div>
               <div className="min-w-0 flex-1">
-                <p className="truncate font-medium text-sm">{seat.name}</p>
+                <p className="truncate font-bold text-sm">{seat.name}</p>
                 {seat.role !== null && (
                   <div className="pt-0.5">
                     <RoleBadge role={seat.role} />
@@ -72,7 +70,7 @@ export function RoundSummary({ view, actions }: { view: RoomView; actions: RoomA
                 )}
               </div>
               {!isMatchEnd && gained > 0 && (
-                <span className="font-mono text-primary text-xs">+{gained}</span>
+                <span className="tabular text-bubblegum text-xs">+{gained}</span>
               )}
               <span className="w-8 text-right font-bold font-mono tabular-nums">{row.score}</span>
             </motion.li>
@@ -84,25 +82,25 @@ export function RoundSummary({ view, actions }: { view: RoomView; actions: RoomA
         {isHost ? (
           isMatchEnd ? (
             <Button className="w-full" size="lg" onClick={actions.rematch}>
-              Play again — same room
+              เล่นอีกครั้ง — ห้องเดิม
             </Button>
           ) : (
             <>
               <Button className="w-full" size="lg" onClick={actions.nextRound}>
-                Next round
+                ไปรอบถัดไป
               </Button>
               <Button
                 variant="ghost"
                 className="w-full text-muted-foreground"
                 onClick={actions.endMatch}
               >
-                End match here
+                จบเกมตรงนี้
               </Button>
             </>
           )
         ) : (
-          <p className="text-center text-muted-foreground text-sm">
-            Waiting for the host to continue…
+          <p className="sticker-sm mx-auto w-fit rounded-full bg-cream px-4 py-1.5 text-center font-bold text-ink text-sm">
+            รอเจ้าของห้องกดต่อ…
           </p>
         )}
       </div>

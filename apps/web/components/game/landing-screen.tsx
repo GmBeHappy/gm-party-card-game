@@ -29,7 +29,7 @@ export function LandingScreen() {
   function validateName(): boolean {
     const trimmed = name.trim()
     if (trimmed.length < 2 || trimmed.length > 16) {
-      setNameError('Pick a name between 2 and 16 characters.')
+      setNameError('ชื่อต้องยาว 2 ถึง 16 ตัวอักษร')
       return false
     }
     setNameError(null)
@@ -47,7 +47,7 @@ export function LandingScreen() {
       const { code: created } = (await response.json()) as { code: string }
       router.push(`/room/${created}`)
     } catch {
-      setCodeError('Could not reach the game server.')
+      setCodeError('เชื่อมต่อเซิร์ฟเวอร์ไม่ได้')
       setBusy(null)
     }
   }
@@ -59,7 +59,7 @@ export function LandingScreen() {
 
     const wanted = code.trim().toUpperCase()
     if (wanted.length !== ROOM_CODE_LENGTH) {
-      setCodeError(`Room codes are ${ROOM_CODE_LENGTH} characters.`)
+      setCodeError(`รหัสห้องมี ${ROOM_CODE_LENGTH} ตัวอักษร`)
       return
     }
 
@@ -73,19 +73,19 @@ export function LandingScreen() {
         reason?: string | null
       }
       if (!info.exists) {
-        setCodeError('No room with that code.')
+        setCodeError('ไม่พบห้องรหัสนี้')
         setBusy(null)
         return
       }
       if (info.canJoin === false && info.reason === 'room-full') {
-        setCodeError('That room is full.')
+        setCodeError('ห้องนี้เต็มแล้ว')
         setBusy(null)
         return
       }
       // A match in progress is not a dead end — you wait for the next round.
       router.push(`/room/${wanted}`)
     } catch {
-      setCodeError('Could not reach the game server.')
+      setCodeError('เชื่อมต่อเซิร์ฟเวอร์ไม่ได้')
       setBusy(null)
     }
   }
@@ -98,11 +98,15 @@ export function LandingScreen() {
         transition={{ type: 'spring', stiffness: 260, damping: 26 }}
         className="text-center"
       >
-        <h1 className="bg-gradient-to-b from-white to-primary/70 bg-clip-text font-bold text-6xl text-transparent tracking-tight">
-          SLAVE
-        </h1>
-        <p className="mt-2 text-muted-foreground text-sm">
-          Shed your hand first. Finish last and you serve the table.
+        <motion.h1
+          animate={{ rotate: [-2.5, 2.5, -2.5] }}
+          transition={{ duration: 6, repeat: Number.POSITIVE_INFINITY, ease: 'easeInOut' }}
+          className="ink-edge font-display text-7xl text-lemon leading-none drop-shadow-[5px_5px_0_var(--ink)]"
+        >
+          สลาฟ
+        </motion.h1>
+        <p className="mt-3 font-semibold text-ink/80 text-sm">
+          ทิ้งไพ่ให้หมดมือก่อนใคร ใครหมดคนสุดท้ายต้องเป็นสลาฟ
         </p>
       </motion.header>
 
@@ -110,15 +114,15 @@ export function LandingScreen() {
         initial={{ opacity: 0, y: 24 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.08, type: 'spring', stiffness: 260, damping: 26 }}
-        className="w-full max-w-sm space-y-6 rounded-2xl border border-white/10 bg-card/70 p-6 backdrop-blur"
+        className="sticker w-full max-w-sm space-y-6 rounded-3xl bg-card p-6"
       >
         <div className="space-y-2">
-          <Label htmlFor="name">Your name</Label>
+          <Label htmlFor="name">ชื่อของคุณ</Label>
           <Input
             id="name"
             value={name}
             maxLength={16}
-            placeholder="Who are you?"
+            placeholder="ใส่ชื่อของคุณ"
             autoComplete="nickname"
             onChange={(event) => setName(event.target.value)}
           />
@@ -126,17 +130,17 @@ export function LandingScreen() {
         </div>
 
         <Button className="w-full" size="lg" disabled={busy !== null} onClick={createRoom}>
-          {busy === 'create' ? 'Creating…' : 'Create a room'}
+          {busy === 'create' ? 'กำลังสร้าง…' : 'สร้างห้องใหม่'}
         </Button>
 
         <div className="flex items-center gap-3 text-muted-foreground text-xs">
           <span className="h-px flex-1 bg-border" />
-          or join one
+          หรือเข้าห้องที่มีอยู่
           <span className="h-px flex-1 bg-border" />
         </div>
 
         <form className="space-y-2" onSubmit={joinRoom}>
-          <Label htmlFor="code">Room code</Label>
+          <Label htmlFor="code">รหัสห้อง</Label>
           <div className="flex gap-2">
             <Input
               id="code"
@@ -146,22 +150,22 @@ export function LandingScreen() {
               autoCapitalize="characters"
               autoComplete="off"
               spellCheck={false}
-              className="font-mono uppercase tracking-[0.3em]"
+              className="tabular text-center text-lg uppercase tracking-[0.3em]"
               onChange={(event) => {
                 setCode(event.target.value.toUpperCase())
                 setCodeError(null)
               }}
             />
             <Button type="submit" variant="secondary" disabled={busy !== null}>
-              Join
+              เข้าห้อง
             </Button>
           </div>
           {codeError !== null && <p className="text-destructive text-xs">{codeError}</p>}
         </form>
       </motion.div>
 
-      <p className="max-w-sm text-center text-[11px] text-muted-foreground leading-relaxed">
-        3–6 players · 52 cards · 8-cut and revolution on by default
+      <p className="sticker-sm max-w-sm rounded-full bg-cream px-4 py-1.5 text-center font-semibold text-ink text-xs">
+        3–6 คน · ไพ่ 52 ใบ · เปิดกฎตัด 8 และปฏิวัติ
       </p>
     </main>
   )

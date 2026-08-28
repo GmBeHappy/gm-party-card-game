@@ -33,25 +33,25 @@ export function ExchangeScreen({ view, actions }: { view: RoomView; actions: Roo
   const give = exchange.give
   const hand = you.hand
   const waitingNames = exchange.waitingOn
-    .map((id) => view.seats.find((seat) => seat.id === id)?.name ?? 'someone')
+    .map((id) => view.seats.find((seat) => seat.id === id)?.name ?? 'ใครสักคน')
     .join(', ')
 
   return (
     <div className="table-felt flex min-h-dvh flex-col">
       <header className="space-y-1 px-4 pt-6 text-center">
-        <p className="text-muted-foreground text-xs uppercase tracking-widest">
-          Round {view.round} · Exchange
+        <p className="font-extrabold text-ink/70 text-xs uppercase tracking-widest">
+          รอบ {view.round} · แลกไพ่
         </p>
-        <h1 className="font-bold text-2xl">Tribute</h1>
+        <h1 className="ink-edge font-display text-5xl text-lemon drop-shadow-[4px_4px_0_var(--ink)]">
+          ส่งส่วย
+        </h1>
         {you.role !== null && (
           <div className="flex justify-center pt-1">
             <RoleBadge role={you.role} />
           </div>
         )}
         {remaining !== null && (
-          <p className="font-mono text-muted-foreground text-xs tabular-nums">
-            {Math.ceil(remaining / 1000)}s
-          </p>
+          <p className="tabular text-ink text-sm">{Math.ceil(remaining / 1000)}s</p>
         )}
       </header>
 
@@ -62,9 +62,9 @@ export function ExchangeScreen({ view, actions }: { view: RoomView; actions: Roo
             animate={{ opacity: 1, y: 0 }}
             className="space-y-2 text-center"
           >
-            <p className="flex items-center justify-center gap-1.5 text-muted-foreground text-xs">
-              <ArrowUp className="size-3.5 text-suit-heart" />
-              Taken from you
+            <p className="sticker-sm mx-auto flex w-fit items-center gap-1.5 rounded-full bg-bubblegum px-3 py-0.5 font-extrabold text-ink text-xs">
+              <ArrowUp className="size-3.5" />
+              ถูกริบไป
             </p>
             <div className="flex justify-center gap-1">
               {exchange.surrendered.map((card) => (
@@ -80,9 +80,9 @@ export function ExchangeScreen({ view, actions }: { view: RoomView; actions: Roo
             animate={{ opacity: 1, y: 0 }}
             className="space-y-2 text-center"
           >
-            <p className="flex items-center justify-center gap-1.5 text-muted-foreground text-xs">
-              <ArrowDown className="size-3.5 text-suit-club" />
-              Handed to you
+            <p className="sticker-sm mx-auto flex w-fit items-center gap-1.5 rounded-full bg-mint px-3 py-0.5 font-extrabold text-ink text-xs">
+              <ArrowDown className="size-3.5" />
+              ได้รับมา
             </p>
             <div className="flex justify-center gap-1">
               {exchange.received.map((card) => (
@@ -93,17 +93,16 @@ export function ExchangeScreen({ view, actions }: { view: RoomView; actions: Roo
         )}
 
         {give === null && (
-          <p className="text-center text-muted-foreground text-sm">
-            Waiting for {waitingNames || 'the table'}…
+          <p className="sticker-sm mx-auto w-fit rounded-full bg-cream px-4 py-1.5 text-center font-bold text-ink text-sm">
+            รอ {waitingNames || 'คนอื่น'}…
           </p>
         )}
       </div>
 
       {give !== null && (
-        <footer className="space-y-3 border-white/5 border-t bg-background/40 px-4 pt-3 pb-safe backdrop-blur">
+        <footer className="space-y-3 border-ink border-t-[3px] bg-cream px-4 pt-3 pb-safe">
           <p className="text-center text-sm">
-            Choose <span className="font-semibold text-primary">{give}</span> card
-            {give === 1 ? '' : 's'} to send back.
+            เลือกไพ่ <span className="tabular text-bubblegum">{give}</span> ใบส่งคืน
           </p>
           <Hand
             dealKey={`exchange-${view.round}`}
@@ -131,7 +130,7 @@ export function ExchangeScreen({ view, actions }: { view: RoomView; actions: Roo
               disabled={selected.length !== give}
               onClick={() => actions.exchange(selected)}
             >
-              Send {selected.length}/{give}
+              ส่ง {selected.length}/{give}
             </Button>
           </div>
         </footer>

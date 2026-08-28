@@ -38,7 +38,7 @@ export function RoomScreen({ code }: { code: string }) {
   if (!hydrated) {
     return (
       <Centered>
-        <Loader2 className="size-7 animate-spin text-primary" />
+        <Loader2 className="size-8 animate-spin text-ink" />
       </Centered>
     )
   }
@@ -60,10 +60,10 @@ export function RoomScreen({ code }: { code: string }) {
     return (
       <Centered>
         <div className="space-y-4 text-center">
-          <h1 className="font-bold text-2xl">Cannot join {code}</h1>
-          <p className="text-muted-foreground text-sm">{fatal.message}</p>
+          <h1 className="font-extrabold text-2xl">เข้าห้อง {code} ไม่ได้</h1>
+          <p className="font-semibold text-ink/70 text-sm">{fatal.message}</p>
           <Button asChild>
-            <Link href="/">Back to the start</Link>
+            <Link href="/">กลับหน้าแรก</Link>
           </Button>
         </div>
       </Centered>
@@ -73,8 +73,8 @@ export function RoomScreen({ code }: { code: string }) {
   if (view === null) {
     return (
       <Centered>
-        <Loader2 className="size-7 animate-spin text-primary" />
-        <p className="mt-3 text-muted-foreground text-sm">Joining {code}…</p>
+        <Loader2 className="size-8 animate-spin text-ink" />
+        <p className="mt-3 font-bold text-ink text-sm">กำลังเข้าห้อง {code}…</p>
       </Centered>
     )
   }
@@ -117,12 +117,12 @@ function WaitingScreen({ code }: { code: string }) {
   return (
     <Centered>
       <div className="space-y-3 text-center">
-        <h1 className="font-bold text-2xl">Match in progress</h1>
-        <p className="max-w-xs text-muted-foreground text-sm">
-          You are in room <span className="font-mono tracking-widest">{code}</span> and will be
-          dealt in at the start of the next round.
+        <h1 className="font-extrabold text-2xl">เกมกำลังเล่นอยู่</h1>
+        <p className="max-w-xs font-semibold text-ink/80 text-sm">
+          คุณอยู่ในห้อง <span className="tabular tracking-widest">{code}</span> แล้ว
+          จะได้รับไพ่ตอนเริ่มรอบถัดไป
         </p>
-        <Loader2 className="mx-auto size-5 animate-spin text-primary" />
+        <Loader2 className="mx-auto size-6 animate-spin text-ink" />
       </div>
     </Centered>
   )
@@ -135,35 +135,35 @@ function NameGate({ code, onSubmit }: { code: string; onSubmit: (name: string) =
   return (
     <Centered>
       <form
-        className="w-full max-w-sm space-y-4 rounded-2xl border border-white/10 bg-card/70 p-6 backdrop-blur"
+        className="sticker w-full max-w-sm space-y-4 rounded-3xl bg-card p-6"
         onSubmit={(event) => {
           event.preventDefault()
           const trimmed = value.trim()
           if (trimmed.length < 2 || trimmed.length > 16) {
-            setError('Pick a name between 2 and 16 characters.')
+            setError('ชื่อต้องยาว 2 ถึง 16 ตัวอักษร')
             return
           }
           onSubmit(trimmed)
         }}
       >
         <div className="space-y-1 text-center">
-          <p className="text-muted-foreground text-xs uppercase tracking-widest">Joining</p>
-          <p className="font-bold font-mono text-2xl tracking-[0.3em]">{code}</p>
+          <p className="font-extrabold text-ink/70 text-xs uppercase tracking-widest">กำลังเข้าห้อง</p>
+          <p className="tabular text-3xl tracking-[0.2em]">{code}</p>
         </div>
         <div className="space-y-2">
-          <Label htmlFor="join-name">Your name</Label>
+          <Label htmlFor="join-name">ชื่อของคุณ</Label>
           <Input
             id="join-name"
             value={value}
             maxLength={16}
             autoFocus
-            placeholder="Who are you?"
+            placeholder="ใส่ชื่อของคุณ"
             onChange={(event) => setValue(event.target.value)}
           />
           {error !== null && <p className="text-destructive text-xs">{error}</p>}
         </div>
         <Button type="submit" className="w-full" size="lg">
-          Take a seat
+          นั่งโต๊ะ
         </Button>
       </form>
     </Centered>

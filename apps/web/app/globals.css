@@ -2,14 +2,14 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 
-@custom-variant dark (&:is(.dark *));
-
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-sans);
-  --font-mono: var(--font-geist-mono);
-  --font-heading: var(--font-sans);
+  --font-sans: var(--font-body);
+  --font-display: var(--font-display);
+  --font-mono: var(--font-nunito);
+  --font-num: var(--font-nunito);
+  --font-heading: var(--font-body);
   --color-ring: var(--ring);
   --color-input: var(--input);
   --color-border: var(--border);
@@ -27,64 +27,70 @@
   --color-card-foreground: var(--card-foreground);
   --color-card: var(--card);
 
-  /* Table-specific tokens */
-  --color-table: var(--table);
-  --color-table-rim: var(--table-rim);
+  /* Candy box */
+  --color-ink: var(--ink);
+  --color-cream: var(--cream);
+  --color-mint: var(--mint);
+  --color-mint-deep: var(--mint-deep);
+  --color-bubblegum: var(--bubblegum);
+  --color-tangerine: var(--tangerine);
+  --color-lemon: var(--lemon);
+  --color-blueberry: var(--blueberry);
+
+  /* Four-colour deck: 18 cards fan out, and suit should read at a glance */
   --color-suit-spade: var(--suit-spade);
   --color-suit-heart: var(--suit-heart);
   --color-suit-diamond: var(--suit-diamond);
   --color-suit-club: var(--suit-club);
   --color-face: var(--face);
-  --color-face-ink: var(--face-ink);
-  --color-danger-glow: var(--danger-glow);
 
-  --radius-sm: calc(var(--radius) * 0.6);
-  --radius-md: calc(var(--radius) * 0.8);
+  --radius-sm: calc(var(--radius) * 0.5);
+  --radius-md: calc(var(--radius) * 0.7);
   --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) * 1.4);
-  --radius-2xl: calc(var(--radius) * 1.8);
-  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-xl: calc(var(--radius) * 1.3);
+  --radius-2xl: calc(var(--radius) * 1.7);
+  --radius-3xl: calc(var(--radius) * 2.1);
 }
 
 /*
- * Dark arcade, committed. There is no light mode: the table is meant to read
- * as a lit surface in a dim room, and the revolution/8-cut flashes only land
- * against a near-black ground.
+ * Sticker book. Nothing here is black: every outline and every letter is the
+ * same grape ink, which is what keeps a six-colour palette from falling apart.
  */
 :root {
-  --background: oklch(0.14 0.021 277);
-  --foreground: oklch(0.97 0.005 285);
-  --card: oklch(0.185 0.026 278);
-  --card-foreground: oklch(0.97 0.005 285);
-  --popover: oklch(0.175 0.026 278);
-  --popover-foreground: oklch(0.97 0.005 285);
-  --primary: oklch(0.66 0.205 296);
-  --primary-foreground: oklch(0.99 0 0);
-  --secondary: oklch(0.26 0.032 281);
-  --secondary-foreground: oklch(0.97 0.005 285);
-  --muted: oklch(0.245 0.026 280);
-  --muted-foreground: oklch(0.7 0.022 286);
-  --accent: oklch(0.31 0.055 288);
-  --accent-foreground: oklch(0.98 0.005 285);
-  --destructive: oklch(0.63 0.225 20);
-  --border: oklch(1 0 0 / 12%);
-  --input: oklch(1 0 0 / 16%);
-  --ring: oklch(0.66 0.205 296);
-  --radius: 0.75rem;
+  --ink: #2b1b3d;
+  --cream: #fff6e4;
+  --mint: #5fd08a;
+  --mint-deep: #2fae66;
+  --bubblegum: #ff6fa5;
+  --tangerine: #ffa64d;
+  --lemon: #ffd84d;
+  --blueberry: #5b8cff;
 
-  --table: oklch(0.175 0.03 279);
-  --table-rim: oklch(0.3 0.06 292);
-  --suit-spade: oklch(0.93 0.008 280);
-  --suit-heart: oklch(0.66 0.22 16);
-  --suit-diamond: oklch(0.8 0.16 72);
-  --suit-club: oklch(0.75 0.17 156);
-  --face: oklch(0.97 0.006 280);
-  --face-ink: oklch(0.2 0.02 280);
-  --danger-glow: oklch(0.66 0.22 16 / 45%);
-}
+  --background: #fff6e4;
+  --foreground: #2b1b3d;
+  --card: #fffdf5;
+  --card-foreground: #2b1b3d;
+  --popover: #fffdf5;
+  --popover-foreground: #2b1b3d;
+  --primary: #ff6fa5;
+  --primary-foreground: #2b1b3d;
+  --secondary: #ffd84d;
+  --secondary-foreground: #2b1b3d;
+  --muted: #ffeed2;
+  --muted-foreground: #7c6a8f;
+  --accent: #ffefa8;
+  --accent-foreground: #2b1b3d;
+  --destructive: #ff4d6d;
+  --border: color-mix(in srgb, #2b1b3d 18%, transparent);
+  --input: color-mix(in srgb, #2b1b3d 30%, transparent);
+  --ring: #ff6fa5;
+  --radius: 1.1rem;
 
-.dark {
-  color-scheme: dark;
+  --face: #fffdf5;
+  --suit-spade: #2b1b3d;
+  --suit-heart: #ff4d6d;
+  --suit-diamond: #ff9f1c;
+  --suit-club: #2fae66;
 }
 
 @layer base {
@@ -94,30 +100,75 @@
   body {
     @apply bg-background text-foreground;
     -webkit-tap-highlight-color: transparent;
+    /* Thai stacks vowels above and below the line — tight leading clips them. */
+    line-height: 1.65;
   }
   html {
     @apply font-sans;
-    color-scheme: dark;
+    color-scheme: light;
+  }
+  /* Numbers are read, not admired: keep them lined up. */
+  .tabular,
+  [data-num] {
+    font-family: var(--font-nunito), ui-sans-serif, system-ui, sans-serif;
+    font-variant-numeric: tabular-nums;
+    font-weight: 800;
   }
 }
 
 @layer utilities {
-  /* The lit playing surface every screen sits on. */
+  /* The playing surface: mint felt with a soft spotlight. */
   .table-felt {
     background:
-      radial-gradient(120% 90% at 50% 0%, oklch(0.26 0.06 292 / 45%) 0%, transparent 60%),
-      radial-gradient(100% 70% at 50% 100%, oklch(0.22 0.05 200 / 30%) 0%, transparent 65%),
-      var(--table);
+      radial-gradient(115% 80% at 50% 0%, #7fdca4 0%, transparent 62%),
+      radial-gradient(120% 90% at 50% 110%, #2fae66 0%, transparent 60%),
+      var(--mint);
   }
 
-  .neon-ring {
-    box-shadow:
-      0 0 0 1px oklch(0.66 0.205 296 / 45%),
-      0 0 24px -4px oklch(0.66 0.205 296 / 55%);
+  /*
+   * The signature: every surface is die-cut — a hard ink outline and an
+   * unblurred offset shadow, like a sticker laid on the table.
+   */
+  .sticker {
+    border: 3px solid var(--ink);
+    box-shadow: 4px 4px 0 0 var(--ink);
   }
 
-  /* Safe-area padding so the hand never sits under a phone's home indicator. */
+  .sticker-sm {
+    border: 2px solid var(--ink);
+    box-shadow: 2px 2px 0 0 var(--ink);
+  }
+
+  /* Pressing pushes the sticker down into its own shadow. */
+  .sticker-press {
+    transition:
+      transform 90ms ease-out,
+      box-shadow 90ms ease-out;
+  }
+  .sticker-press:active:not(:disabled) {
+    transform: translate(4px, 4px);
+    box-shadow: 0 0 0 0 var(--ink);
+  }
+
+  /* 2px, not 3: a heavier stroke closes up Thai tone marks. */
+  .ink-edge {
+    -webkit-text-stroke: 2px var(--ink);
+    paint-order: stroke fill;
+    line-height: 1.35;
+  }
+
   .pb-safe {
     padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
+  }
+}
+
+/* Cartoons squash and stretch; some people would rather they did not. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  ::before,
+  ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
   }
 }

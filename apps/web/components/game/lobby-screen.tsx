@@ -6,7 +6,6 @@ import { Bot, Check, Copy, Crown, Shuffle, UserMinus } from 'lucide-react'
 import { AnimatePresence, motion } from 'motion/react'
 import { useState } from 'react'
 import { Identicon } from '@/components/game/identicon'
-import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import {
@@ -41,19 +40,19 @@ export function LobbyScreen({ view, actions }: { view: RoomView; actions: RoomAc
 
   return (
     <div className="mx-auto w-full max-w-xl space-y-6 px-4 py-6">
-      <section className="rounded-2xl border border-white/10 bg-card/70 p-5 text-center backdrop-blur">
-        <p className="text-muted-foreground text-xs uppercase tracking-widest">Room code</p>
+      <section className="sticker rounded-3xl bg-lemon p-5 text-center">
+        <p className="text-muted-foreground text-xs uppercase tracking-widest">รหัสห้อง</p>
         <p className="mt-1 font-bold font-mono text-4xl tracking-[0.35em]">{view.code}</p>
         <Button variant="secondary" size="sm" className="mt-3" onClick={copyLink}>
           {copied ? <Check className="size-3.5" /> : <Copy className="size-3.5" />}
-          {copied ? 'Link copied' : 'Copy invite link'}
+          {copied ? 'คัดลอกแล้ว' : 'คัดลอกลิงก์ชวนเพื่อน'}
         </Button>
       </section>
 
       <section className="space-y-3">
         <div className="flex items-center justify-between">
-          <h2 className="font-semibold text-sm">
-            Players{' '}
+          <h2 className="font-extrabold text-base">
+            ผู้เล่น{' '}
             <span className="text-muted-foreground">
               {seated}/{MAX_PLAYERS}
             </span>
@@ -66,10 +65,10 @@ export function LobbyScreen({ view, actions }: { view: RoomView; actions: RoomAc
                 disabled={seated >= MAX_PLAYERS}
                 onClick={actions.addBot}
               >
-                <Bot className="size-3.5" /> Add bot
+                <Bot className="size-3.5" /> เพิ่มบอท
               </Button>
               <Button variant="ghost" size="sm" onClick={actions.shuffleSeats}>
-                <Shuffle className="size-3.5" /> Shuffle
+                <Shuffle className="size-3.5" /> สลับที่นั่ง
               </Button>
             </div>
           )}
@@ -85,38 +84,32 @@ export function LobbyScreen({ view, actions }: { view: RoomView; actions: RoomAc
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, x: -12 }}
                 className={cn(
-                  'flex items-center gap-3 rounded-xl border border-white/10 bg-card/60 p-3',
-                  seat.ready && 'border-primary/40',
+                  'sticker flex items-center gap-3 rounded-2xl p-3',
+                  seat.ready ? 'bg-mint' : 'bg-card',
                 )}
               >
-                <span className="w-5 text-center font-mono text-muted-foreground text-xs">
-                  {index + 1}
-                </span>
-                <div className="size-9 overflow-hidden rounded-full ring-1 ring-white/15">
+                <span className="tabular w-5 text-center text-ink/50 text-xs">{index + 1}</span>
+                <div className="sticker-sm size-10 shrink-0 overflow-hidden rounded-full">
                   <Identicon seed={seat.id} />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="flex items-center gap-1.5 truncate font-medium text-sm">
+                  <p className="flex items-center gap-1.5 truncate font-bold text-sm">
                     {seat.name}
-                    {seat.isHost && <Crown className="size-3.5 text-suit-diamond" />}
+                    {seat.isHost && <Crown className="size-4 fill-lemon text-ink" />}
                     {seat.isBot && <Bot className="size-3.5 text-muted-foreground" />}
                   </p>
                   {!seat.connected && !seat.isBot && (
-                    <p className="text-muted-foreground text-xs">disconnected</p>
+                    <p className="text-muted-foreground text-xs">หลุดการเชื่อมต่อ</p>
                   )}
                 </div>
-                {seat.ready ? (
-                  <Badge className="bg-primary/20 text-primary">Ready</Badge>
-                ) : (
-                  <Badge variant="outline" className="text-muted-foreground">
-                    Waiting
-                  </Badge>
-                )}
+                <span className="sticker-sm shrink-0 rounded-full bg-cream px-2.5 py-0.5 font-extrabold text-[11px] text-ink">
+                  {seat.ready ? 'พร้อม' : 'ยังไม่พร้อม'}
+                </span>
                 {isHost && seat.id !== you?.id && (
                   <Button
                     variant="ghost"
                     size="icon"
-                    aria-label={`Remove ${seat.name}`}
+                    aria-label={`เตะ ${seat.name} ออกจากห้อง`}
                     onClick={() => actions.removeSeat(seat.id)}
                   >
                     <UserMinus className="size-4 text-muted-foreground" />
@@ -129,7 +122,7 @@ export function LobbyScreen({ view, actions }: { view: RoomView; actions: RoomAc
 
         {view.waiting.length > 0 && (
           <p className="text-muted-foreground text-xs">
-            Waiting for a seat: {view.waiting.map((person) => person.name).join(', ')}
+            รอที่นั่ง: {view.waiting.map((person) => person.name).join(', ')}
           </p>
         )}
       </section>
@@ -143,24 +136,24 @@ export function LobbyScreen({ view, actions }: { view: RoomView; actions: RoomAc
           size="lg"
           onClick={() => actions.ready(!seatReady(view))}
         >
-          {seatReady(view) ? "I'm not ready" : "I'm ready"}
+          {seatReady(view) ? 'ยังไม่พร้อม' : 'ฉันพร้อมแล้ว'}
         </Button>
 
         {isHost && (
           <Button className="w-full" size="lg" disabled={!canStart} onClick={actions.start}>
-            Start match
+            เริ่มเกม
           </Button>
         )}
 
         {isHost && !canStart && (
           <p className="text-center text-muted-foreground text-xs">
             {seated < MIN_PLAYERS
-              ? `Needs at least ${MIN_PLAYERS} players — add a bot to fill a seat.`
-              : 'Waiting for everyone to be ready.'}
+              ? `ต้องมีอย่างน้อย ${MIN_PLAYERS} คน เพิ่มบอทเติมที่นั่งก็ได้`
+              : 'รอให้ทุกคนกดพร้อมก่อน'}
           </p>
         )}
         {!isHost && (
-          <p className="text-center text-muted-foreground text-xs">The host starts the match.</p>
+          <p className="text-center font-semibold text-ink/60 text-xs">เจ้าของห้องเป็นคนกดเริ่มเกม</p>
         )}
       </section>
     </div>
@@ -174,13 +167,13 @@ function seatReady(view: RoomView): boolean {
 function RoomSettings({ view, actions }: { view: RoomView; actions: RoomActions }) {
   const { settings } = view
   return (
-    <section className="space-y-4 rounded-2xl border border-white/10 bg-card/60 p-4">
-      <h2 className="font-semibold text-sm">Room rules</h2>
+    <section className="sticker space-y-4 rounded-3xl bg-card p-4">
+      <h2 className="font-bold text-base">กติกาห้อง</h2>
 
       <div className="flex items-center justify-between gap-4">
         <div>
-          <Label htmlFor="eight-cut">8-cut</Label>
-          <p className="text-muted-foreground text-xs">Any play with an 8 ends the trick.</p>
+          <Label htmlFor="eight-cut">ตัด 8</Label>
+          <p className="text-muted-foreground text-xs">ลงไพ่ 8 จบตานั้นทันที คนลงได้นำต่อ</p>
         </div>
         <Switch
           id="eight-cut"
@@ -191,10 +184,8 @@ function RoomSettings({ view, actions }: { view: RoomView; actions: RoomActions 
 
       <div className="flex items-center justify-between gap-4">
         <div>
-          <Label htmlFor="revolution">Revolution</Label>
-          <p className="text-muted-foreground text-xs">
-            Four of a kind flips the rank order for the round.
-          </p>
+          <Label htmlFor="revolution">ปฏิวัติ</Label>
+          <p className="text-muted-foreground text-xs">ลงไพ่สี่ใบเหมือนกัน สลับลำดับไพ่ทั้งรอบ</p>
         </div>
         <Switch
           id="revolution"
@@ -205,7 +196,7 @@ function RoomSettings({ view, actions }: { view: RoomView; actions: RoomActions 
 
       <div className="grid grid-cols-2 gap-3">
         <div className="space-y-1.5">
-          <Label>Turn timer</Label>
+          <Label>เวลาต่อตา</Label>
           <Select
             value={String(settings.turnSeconds ?? 'off')}
             onValueChange={(value) =>
@@ -218,16 +209,16 @@ function RoomSettings({ view, actions }: { view: RoomView; actions: RoomActions 
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="15">15 seconds</SelectItem>
-              <SelectItem value="30">30 seconds</SelectItem>
-              <SelectItem value="60">60 seconds</SelectItem>
-              <SelectItem value="off">No timer</SelectItem>
+              <SelectItem value="15">15 วินาที</SelectItem>
+              <SelectItem value="30">30 วินาที</SelectItem>
+              <SelectItem value="60">60 วินาที</SelectItem>
+              <SelectItem value="off">ไม่จับเวลา</SelectItem>
             </SelectContent>
           </Select>
         </div>
 
         <div className="space-y-1.5">
-          <Label>Rounds</Label>
+          <Label>จำนวนรอบ</Label>
           <Select
             value={String(settings.totalRounds ?? 'endless')}
             onValueChange={(value) =>
@@ -240,10 +231,10 @@ function RoomSettings({ view, actions }: { view: RoomView; actions: RoomActions 
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="3">3 rounds</SelectItem>
-              <SelectItem value="5">5 rounds</SelectItem>
-              <SelectItem value="10">10 rounds</SelectItem>
-              <SelectItem value="endless">Endless</SelectItem>
+              <SelectItem value="3">3 รอบ</SelectItem>
+              <SelectItem value="5">5 รอบ</SelectItem>
+              <SelectItem value="10">10 รอบ</SelectItem>
+              <SelectItem value="endless">ไม่จำกัด</SelectItem>
             </SelectContent>
           </Select>
         </div>

@@ -10,26 +10,27 @@ import { TurnRing } from '@/components/game/turn-ring'
 import { cn } from '@/lib/utils'
 
 export const ROLE_LABEL: Readonly<Record<RoleName, string>> = {
-  president: 'President',
-  vicePresident: 'Vice-President',
-  citizen: 'Citizen',
-  viceSlave: 'Vice-Slave',
-  slave: 'Slave',
+  president: 'เศรษฐี',
+  vicePresident: 'รองเศรษฐี',
+  citizen: 'สามัญชน',
+  viceSlave: 'รองสลาฟ',
+  slave: 'สลาฟ',
 }
 
+/** Rank is the whole point of the game, so it gets the whole palette. */
 const ROLE_STYLE: Readonly<Record<RoleName, string>> = {
-  president: 'bg-suit-diamond/20 text-suit-diamond ring-suit-diamond/40',
-  vicePresident: 'bg-suit-club/15 text-suit-club ring-suit-club/35',
-  citizen: 'bg-white/8 text-muted-foreground ring-white/15',
-  viceSlave: 'bg-white/8 text-muted-foreground ring-white/15',
-  slave: 'bg-suit-heart/18 text-suit-heart ring-suit-heart/40',
+  president: 'bg-lemon',
+  vicePresident: 'bg-mint',
+  citizen: 'bg-cream',
+  viceSlave: 'bg-cream',
+  slave: 'bg-bubblegum',
 }
 
 export function RoleBadge({ role }: { role: RoleName }) {
   return (
     <span
       className={cn(
-        'rounded-full px-1.5 py-0.5 font-medium text-[10px] uppercase tracking-wide ring-1',
+        'sticker-sm rounded-full px-2 py-0.5 font-extrabold text-[10px] text-ink uppercase tracking-wide',
         ROLE_STYLE[role],
       )}
     >
@@ -60,43 +61,41 @@ export function Seat({ seat, progress, urgent, compact = false }: SeatProps) {
         {progress !== null && <TurnRing progress={progress} urgent={urgent} />}
         <div
           className={cn(
-            'absolute inset-[6px] overflow-hidden rounded-full ring-1 ring-white/15',
-            seat.isCurrent && 'ring-2 ring-primary',
+            'sticker-sm absolute inset-[7px] overflow-hidden rounded-full',
+            seat.isCurrent && 'ring-4 ring-lemon',
             !seat.connected && 'grayscale',
           )}
         >
           <Identicon seed={seat.id} />
         </div>
         {!seat.connected && (
-          <span className="-right-1 -top-1 absolute rounded-full bg-background p-1 ring-1 ring-border">
-            <WifiOff className="size-3 text-muted-foreground" />
+          <span className="sticker-sm -right-1 -top-1 absolute rounded-full bg-cream p-1">
+            <WifiOff className="size-3 text-ink" />
           </span>
         )}
         {seat.finishedPlace !== null && (
-          <span className="-bottom-1 -right-1 absolute grid size-5 place-items-center rounded-full bg-primary font-bold text-[10px] text-primary-foreground ring-2 ring-background">
+          <span className="sticker-sm tabular -bottom-1 -right-1 absolute grid size-6 place-items-center rounded-full bg-lemon text-[11px] text-ink">
             {seat.finishedPlace}
           </span>
         )}
       </div>
 
       <div className="flex max-w-[7.5rem] items-center gap-1">
-        {seat.isHost && <Crown className="size-3 shrink-0 text-suit-diamond" />}
-        {seat.isBot && <Bot className="size-3 shrink-0 text-muted-foreground" />}
-        <span className="truncate font-medium text-xs">{seat.name}</span>
+        {seat.isHost && <Crown className="size-3.5 shrink-0 fill-lemon text-ink" />}
+        {seat.isBot && <Bot className="size-3 shrink-0 text-ink/60" />}
+        <span className="truncate font-bold text-xs">{seat.name}</span>
       </div>
 
       {seat.role !== null && <RoleBadge role={seat.role} />}
 
       <div className="flex items-center gap-1.5">
         <CardBackStack count={seat.handCount} />
-        <span className="font-mono text-[11px] text-muted-foreground tabular-nums">
-          {seat.handCount}
-        </span>
+        <span className="tabular text-[12px] text-ink">{seat.handCount}</span>
       </div>
 
       {seat.passed && (
-        <span className="rounded bg-white/10 px-1.5 text-[10px] text-muted-foreground uppercase tracking-wide">
-          Passed
+        <span className="sticker-sm rounded-full bg-cream px-2 font-extrabold text-[10px] text-ink uppercase tracking-wide">
+          ผ่านแล้ว
         </span>
       )}
     </motion.div>

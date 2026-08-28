@@ -1,6 +1,6 @@
-# Slave
+# สลาฟ (Slave)
 
-A multiplayer **Daifugō** ("Slave" / President) card game. Create a room, share
+A multiplayer **Daifugō** (สลาฟ / President) card game, with a Thai interface. Create a room, share
 the six-character code, and play 3–6 handed in the browser. Disconnecting never
 costs you your seat: while a match is running you can close the tab, come back,
 and your hand is still there.
@@ -50,7 +50,7 @@ Standard Daifugō on a plain **52-card deck — no jokers**.
   player to play has passed, the trick clears and that player leads.
 - The **♦3 holder** leads the first trick of round one. After that the **Slave**
   leads, which is their compensation for the tribute.
-- First out is **President**, last is **Slave**. Points are
+- First out is **เศรษฐี** (President), last is **สลาฟ** (Slave). Points are
   `playerCount − position`, so in a four-player game: 3 / 2 / 1 / 0.
 
 ### Between rounds — the tribute
@@ -90,6 +90,25 @@ player.
 - Rooms live in memory behind a `RoomStore` interface and are collected ten
   minutes after the last player disconnects. Swapping in Redis is one
   implementation of that interface.
+
+## Look
+
+Sticker book. Every surface — card, seat, button, panel — is die-cut: a 3px
+outline in grape ink (`#2B1B3D`, never black) over a hard offset shadow with no
+blur, and buttons drop into their own shadow when pressed. The table is mint
+felt, panels are warm cream, and the accents are bubblegum, tangerine and lemon.
+
+The interface is in Thai, which decides the type: Latin display faces have no
+Thai glyphs, so all three families cover the script. **Itim** appears only on the
+wordmark, the ปฏิวัติ and ตัด 8 flashes, ส่งส่วย and จบเกมแล้ว; **Mali** sets every
+other word; **Nunito** with tabular figures handles card counts, scores, timers
+and room codes, which have to line up in a column. Body leading is 1.65 and the
+display ink stroke is 2px rather than 3px — Thai stacks vowels and tone marks
+above and below the line, and a heavier stroke closes them up.
+
+The deck is four-coloured — grape spades, cherry hearts, tangerine diamonds,
+leaf clubs. That is not decoration: you scan an 18-card fan for a matching suit
+many times a round, and two colours make that slower.
 
 ## Sound
 

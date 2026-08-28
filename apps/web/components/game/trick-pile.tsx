@@ -22,9 +22,9 @@ export function TrickPile({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="text-muted-foreground text-sm"
+            className="sticker-sm rounded-full bg-cream px-4 py-1.5 text-center font-bold text-ink text-sm"
           >
-            {revolution ? 'Revolution is running — lowest wins' : 'Open trick — anything leads'}
+            {revolution ? 'ปฏิวัติอยู่ — ไพ่เล็กชนะ' : 'ตาเปิด — ลงไพ่อะไรก็ได้'}
           </motion.p>
         ) : (
           <motion.div
@@ -42,7 +42,7 @@ export function TrickPile({
         )}
       </AnimatePresence>
       {leaderName !== null && cards !== null && cards.length > 0 && (
-        <p className="text-muted-foreground text-xs">played by {leaderName}</p>
+        <p className="font-bold text-ink/70 text-xs">{leaderName} เป็นคนลง</p>
       )}
     </div>
   )

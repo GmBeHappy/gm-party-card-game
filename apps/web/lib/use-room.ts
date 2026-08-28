@@ -100,9 +100,7 @@ export function useRoom(roomCode: string, name: string | null): UseRoom {
             setFatal({
               code: 'not-seated',
               message:
-                message.payload.reason === 'kicked'
-                  ? 'The host removed you from the room.'
-                  : 'That room has closed.',
+                message.payload.reason === 'kicked' ? 'เจ้าของห้องเตะคุณออกจากห้อง' : 'ห้องนี้ปิดไปแล้ว',
             })
             break
           case 'pong':
