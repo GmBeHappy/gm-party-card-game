@@ -19,6 +19,7 @@ import {
 import {
   buildRoomView,
   type ErrorCode,
+  heartsSettingsPatchSchema,
   type MemberInfo,
   type RoomView,
   type ServerMessage,
@@ -30,7 +31,10 @@ import {
  * A settings patch arrives loosely typed and is re-parsed here with the active
  * game's strict schema, so one game's key can never land in another's room.
  */
-const SETTINGS_SCHEMAS = { slave: slaveSettingsPatchSchema } as const
+const SETTINGS_SCHEMAS = {
+  slave: slaveSettingsPatchSchema,
+  hearts: heartsSettingsPatchSchema,
+} as const
 
 import { generatePlayerId } from './codes'
 import { timings } from './config'

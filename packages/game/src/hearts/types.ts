@@ -39,13 +39,7 @@ export interface HeartsTrick {
   readonly leadSuit: Suit | null
 }
 
-/*
- * `Omit<BaseState, 'game'>` rather than `BaseState`, because GameKind is still
- * only 'slave' until the module is registered. Task 13 widens GameKind and this
- * goes back to plain `extends BaseState` — keeping every switch in the repo
- * exhaustive in the meantime.
- */
-export interface HeartsState extends Omit<BaseState, 'game'> {
+export interface HeartsState extends BaseState {
   readonly game: 'hearts'
   readonly settings: HeartsSettings
   /** Non-null only during the passing phase. */

@@ -48,3 +48,43 @@ describe('the game registry', () => {
     expect(botActionFor(state, other)).toBeNull()
   })
 })
+
+describe('the hearts entry in the registry', () => {
+  it('describes hearts as a four-handed game where low scores win', () => {
+    expect(GAME_META.hearts).toMatchObject({
+      kind: 'hearts',
+      minPlayers: 4,
+      maxPlayers: 4,
+      scoreDirection: 'low',
+    })
+  })
+
+  it('builds a hearts lobby and starts it through the union', () => {
+    const state = createStateFor('hearts', makePlayers(4))
+    expect(state.game).toBe('hearts')
+    const result = reduceGame(state, { type: 'startMatch' }, ctx())
+    expect(result.ok).toBe(true)
+    if (!result.ok) return
+    expect(result.state.phase).toBe('exchange')
+  })
+
+  it('waits on all four seats during the pass', () => {
+    const started = reduceGame(
+      createStateFor('hearts', makePlayers(4)),
+      { type: 'startMatch' },
+      ctx(),
+    )
+    if (!started.ok) throw new Error('failed to start')
+    expect(waitingOnIn(started.state)).toHaveLength(4)
+  })
+
+  it('offers a bot something to pass during the pass phase', () => {
+    const started = reduceGame(
+      createStateFor('hearts', makePlayers(4)),
+      { type: 'startMatch' },
+      ctx(),
+    )
+    if (!started.ok) throw new Error('failed to start')
+    expect(botActionFor(started.state, 'p1')?.type).toBe('exchangeChoose')
+  })
+})

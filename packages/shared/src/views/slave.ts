@@ -4,6 +4,7 @@ import {
   type ExchangeTransfer,
   type PlayerId,
   type RoleName,
+  type SlaveSettings,
   type SlaveState,
 } from '@cards/game'
 
@@ -20,6 +21,7 @@ export interface ExchangeView {
 
 export interface SlaveTable {
   readonly game: 'slave'
+  readonly settings: SlaveSettings
   readonly trick: {
     readonly cards: readonly Card[] | null
     readonly count: number | null
@@ -37,6 +39,7 @@ export interface SlaveTable {
 export function buildSlaveTable(state: SlaveState, viewerId: PlayerId | null): SlaveTable {
   return {
     game: 'slave',
+    settings: state.settings,
     trick: {
       cards: state.trick.current?.cards ?? null,
       count: state.trick.current?.count ?? null,

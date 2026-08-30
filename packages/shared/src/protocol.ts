@@ -28,6 +28,14 @@ export const slaveSettingsPatchSchema = z
   })
   .strict()
 
+/** Hearts takes only a clock and a finish line — the rules themselves are fixed. */
+export const heartsSettingsPatchSchema = z
+  .object({
+    turnSeconds: z.union([z.literal(15), z.literal(30), z.literal(60), z.null()]).optional(),
+    targetScore: z.union([z.literal(50), z.literal(100), z.literal(200)]).optional(),
+  })
+  .strict()
+
 /**
  * The wire accepts any settings-shaped object; `updateSettings` re-parses it
  * with the active game's strict schema, so one game's key cannot land in

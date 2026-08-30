@@ -1,7 +1,16 @@
 import { afterAll, beforeAll, describe, expect, it } from 'bun:test'
+import type { RoomView } from '@cards/shared'
 import { createApp } from '../src/app'
 import { timings } from '../src/config'
 import { playOutRound, TestClient, until } from './client'
+
+/** Narrow a view to one game's settings, or null if it is the other game. */
+function slaveSettings(view: RoomView | null | undefined) {
+  return view?.table.game === 'slave' ? view.table.settings : null
+}
+function heartsSettings(view: RoomView | null | undefined) {
+  return view?.table.game === 'hearts' ? view.table.settings : null
+}
 
 let handle: ReturnType<typeof createApp>
 let base: string
@@ -184,7 +193,7 @@ describe('bots', () => {
 
     host.send({ type: 'ready', payload: { ready: true } })
     host.send({ type: 'settings', payload: { turnSeconds: 15, totalRounds: 3 } })
-    await until(() => host.view?.settings.totalRounds === 3, 'settings applied')
+    await until(() => slaveSettings(host.view)?.totalRounds === 3, 'settings applied')
 
     host.send({ type: 'start' })
     await until(() => host.view?.phase === 'playing', 'started')
@@ -315,5 +324,51 @@ describe('choosing a game', () => {
 
     host.disconnect()
     guest.disconnect()
+  })
+})
+
+describe('a hearts room', () => {
+  async function createHeartsRoom(): Promise<string> {
+    const response = await fetch(`${base}/rooms`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ game: 'hearts' }),
+    })
+    const { code } = (await response.json()) as { code: string }
+    return code
+  }
+
+  it('serves a hearts table view with hearts settings', async () => {
+    const code = await createHeartsRoom()
+    const host = new TestClient(wsUrl, 'Host')
+    await host.connect(code)
+    await until(() => host.view !== null, 'view arrived')
+
+    expect(host.view?.game).toBe('hearts')
+    expect(host.view?.table.game).toBe('hearts')
+    expect(heartsSettings(host.view)).toMatchObject({ targetScore: 100 })
+    host.disconnect()
+  })
+
+  it('accepts a hearts settings patch and rejects a slave one', async () => {
+    const code = await createHeartsRoom()
+    const host = new TestClient(wsUrl, 'Host')
+    await host.connect(code)
+    await until(() => host.view !== null, 'view arrived')
+
+    host.send({ type: 'settings', payload: { targetScore: 50 } })
+    await until(() => heartsSettings(host.view)?.targetScore === 50, 'target applied')
+
+    host.send({ type: 'settings', payload: { eightCut: false } })
+    await until(() => host.errors.includes('invalid-settings'), 'slave key refused')
+    host.disconnect()
+  })
+
+  it('caps the table at four seats', async () => {
+    const code = await createHeartsRoom()
+    const info = (await fetch(`${base}/rooms/${code}`).then((r) => r.json())) as {
+      maxPlayers: number
+    }
+    expect(info.maxPlayers).toBe(4)
   })
 })

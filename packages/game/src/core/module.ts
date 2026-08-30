@@ -3,8 +3,8 @@ import type { Phase, RoundResult } from './phase'
 import type { Player, PlayerId } from './player'
 import type { Rng } from './rng'
 
-/** Widened as games are added. Keeping it exact keeps every switch exhaustive. */
-export type GameKind = 'slave'
+/** Every game this table can deal. Exhaustive switches key off this. */
+export type GameKind = 'slave' | 'hearts'
 
 export interface EngineContext {
   readonly now: number

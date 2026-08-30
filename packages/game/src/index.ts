@@ -4,6 +4,13 @@ export * from './core/phase'
 export * from './core/player'
 export * from './core/rng'
 export * from './core/scoring'
+export { legalCardIds, pendingPassers } from './hearts/engine'
+export { heartsModule } from './hearts/index'
+export { highestCards, sortHand as sortHeartsHand } from './hearts/order'
+export * from './hearts/passing'
+export * from './hearts/scoring'
+export * from './hearts/tricks'
+export * from './hearts/types'
 export * from './slave/bot'
 export * from './slave/engine'
 export * from './slave/exchange'
@@ -16,11 +23,15 @@ export * from './slave/types'
 
 import type { Action, ActionResult, EngineContext, GameKind, GameModule } from './core/module'
 import type { Player, PlayerId } from './core/player'
+import { legalCardIds } from './hearts/engine'
+import { heartsModule } from './hearts/index'
+import type { HeartsSettings, HeartsState } from './hearts/types'
+import { playableCardIds } from './slave/engine'
 import { slaveModule } from './slave/index'
 import type { SlaveSettings, SlaveState } from './slave/types'
 
 /** The authoritative state of any room, discriminated on `game`. */
-export type GameState = SlaveState
+export type GameState = SlaveState | HeartsState
 
 /** Static facts about a game, safe to read without narrowing the state. */
 export interface GameMeta {
@@ -37,9 +48,15 @@ export const GAME_META: Readonly<Record<GameKind, GameMeta>> = {
     maxPlayers: slaveModule.maxPlayers,
     scoreDirection: slaveModule.scoreDirection,
   },
+  hearts: {
+    kind: heartsModule.kind,
+    minPlayers: heartsModule.minPlayers,
+    maxPlayers: heartsModule.maxPlayers,
+    scoreDirection: heartsModule.scoreDirection,
+  },
 }
 
-export const GAME_KINDS: readonly GameKind[] = ['slave'] as const
+export const GAME_KINDS: readonly GameKind[] = ['slave', 'hearts'] as const
 
 /*
  * TypeScript cannot dispatch a union of modules across a union of states, so
@@ -51,6 +68,8 @@ export function createStateFor(kind: GameKind, players: readonly Player[]): Game
   switch (kind) {
     case 'slave':
       return slaveModule.createInitialState(players, slaveModule.defaultSettings)
+    case 'hearts':
+      return heartsModule.createInitialState(players, heartsModule.defaultSettings)
   }
 }
 
@@ -62,6 +81,8 @@ export function reduceGame(
   switch (state.game) {
     case 'slave':
       return slaveModule.reduce(state, action, ctx)
+    case 'hearts':
+      return heartsModule.reduce(state, action, ctx)
   }
 }
 
@@ -69,6 +90,8 @@ export function seatPlayersIn(state: GameState, players: readonly Player[]): Gam
   switch (state.game) {
     case 'slave':
       return slaveModule.seatPlayers(state, players)
+    case 'hearts':
+      return heartsModule.seatPlayers(state, players)
   }
 }
 
@@ -80,6 +103,8 @@ export function setConnectedIn(
   switch (state.game) {
     case 'slave':
       return slaveModule.setConnected(state, playerId, connected)
+    case 'hearts':
+      return heartsModule.setConnected(state, playerId, connected)
   }
 }
 
@@ -92,6 +117,8 @@ export function applySettingsIn(state: GameState, patch: Record<string, unknown>
   switch (state.game) {
     case 'slave':
       return slaveModule.applySettings(state, patch as Partial<SlaveSettings>)
+    case 'hearts':
+      return heartsModule.applySettings(state, patch as Partial<HeartsSettings>)
   }
 }
 
@@ -99,6 +126,8 @@ export function botActionFor(state: GameState, playerId: PlayerId): Action | nul
   switch (state.game) {
     case 'slave':
       return slaveModule.botAction(state, playerId)
+    case 'hearts':
+      return heartsModule.botAction(state, playerId)
   }
 }
 
@@ -106,6 +135,18 @@ export function waitingOnIn(state: GameState): readonly PlayerId[] {
   switch (state.game) {
     case 'slave':
       return slaveModule.waitingOn(state)
+    case 'hearts':
+      return heartsModule.waitingOn(state)
+  }
+}
+
+/** Card ids the viewer may legally use right now, whichever game this is. */
+export function playableFor(state: GameState, playerId: PlayerId): string[] {
+  switch (state.game) {
+    case 'slave':
+      return [...playableCardIds(state, playerId)]
+    case 'hearts':
+      return [...legalCardIds(state, playerId)]
   }
 }
 

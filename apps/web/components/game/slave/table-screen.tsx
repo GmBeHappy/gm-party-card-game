@@ -40,7 +40,7 @@ export function TableScreen({
   const [flash, setFlash] = useState<{ kind: FlashKind; id: number }>({ kind: null, id: 0 })
 
   const remaining = useCountdown(view.turnDeadline)
-  const turnMs = (view.settings.turnSeconds ?? 0) * 1000
+  const turnMs = (table.game === 'slave' ? (table.settings.turnSeconds ?? 0) : 0) * 1000
   const progress = remaining === null || turnMs === 0 ? null : remaining / turnMs
   const urgent = remaining !== null && remaining <= 5_000
 
@@ -92,7 +92,7 @@ export function TableScreen({
           <span className="tabular text-ink text-sm tracking-widest">{view.code}</span>
           <span className="font-semibold text-ink/70 text-xs">
             รอบ {view.round}
-            {view.settings.totalRounds !== null && ` / ${view.settings.totalRounds}`}
+            {table.settings.totalRounds !== null && ` / ${table.settings.totalRounds}`}
           </span>
         </div>
         <div className="flex items-center gap-1">

@@ -1,4 +1,5 @@
 export * from './messages'
 export * from './protocol'
 export * from './view'
+export * from './views/hearts'
 export * from './views/slave'

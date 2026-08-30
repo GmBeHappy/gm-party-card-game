@@ -6,15 +6,15 @@ import {
   handCounts,
   type Phase,
   type PlayerId,
-  playableCardIds,
+  playableFor,
   type RoundResult,
-  type SlaveSettings,
   standings,
 } from '@cards/game'
+import { buildHeartsTable, type HeartsTable } from './views/hearts'
 import { buildSlaveTable, type SlaveTable } from './views/slave'
 
 /** Everything specific to the game being played. */
-export type TableView = SlaveTable
+export type TableView = SlaveTable | HeartsTable
 
 export interface MemberInfo {
   readonly id: PlayerId
@@ -50,7 +50,6 @@ export interface RoomView {
   readonly hostId: PlayerId | null
   readonly game: GameKind
   readonly phase: Phase
-  readonly settings: SlaveSettings
   readonly round: number
   readonly seats: readonly SeatView[]
   /** The viewer's private slice. Null for a connection with no seat. */
@@ -105,19 +104,19 @@ export function buildRoomView(input: BuildViewInput): RoomView {
       : {
           id: viewerId,
           hand: state.hands[viewerId] ?? [],
-          playable: [...playableCardIds(state, viewerId)],
+          playable: playableFor(state, viewerId),
           isHost: viewerId === hostId,
           score: state.scores[viewerId] ?? 0,
         }
 
-  const table: TableView = buildSlaveTable(state, viewerId)
+  const table: TableView =
+    state.game === 'slave' ? buildSlaveTable(state, viewerId) : buildHeartsTable(state, viewerId)
 
   return {
     code,
     hostId,
     game: state.game,
     phase: state.phase,
-    settings: state.settings,
     round: state.round,
     seats,
     you,

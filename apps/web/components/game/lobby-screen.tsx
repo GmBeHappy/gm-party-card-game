@@ -1,6 +1,6 @@
 'use client'
 
-import { GAME_META } from '@cards/game'
+import { GAME_META, type HeartsSettings, type SlaveSettings } from '@cards/game'
 import type { RoomView } from '@cards/shared'
 import { Bot, Check, Copy, Crown, Shuffle, UserMinus } from 'lucide-react'
 import { AnimatePresence, motion } from 'motion/react'
@@ -168,7 +168,81 @@ function seatReady(view: RoomView): boolean {
 }
 
 function RoomSettings({ view, actions }: { view: RoomView; actions: RoomActions }) {
-  const { settings } = view
+  const table = view.table
+  return table.game === 'hearts' ? (
+    <HeartsRoomSettings settings={table.settings} actions={actions} />
+  ) : (
+    <SlaveRoomSettings settings={table.settings} actions={actions} />
+  )
+}
+
+function HeartsRoomSettings({
+  settings,
+  actions,
+}: {
+  settings: HeartsSettings
+  actions: RoomActions
+}) {
+  return (
+    <section className="sticker space-y-4 rounded-3xl bg-card p-4">
+      <h2 className="font-bold text-base">กติกาห้อง</h2>
+      <p className="text-muted-foreground text-xs">
+        โพแดง 1 แต้ม · โพดำ Q 13 แต้ม · เก็บครบ 26 คนอื่นรับไปคนละ 26
+      </p>
+
+      <div className="grid grid-cols-2 gap-3">
+        <div className="space-y-1.5">
+          <Label>เวลาต่อตา</Label>
+          <Select
+            value={String(settings.turnSeconds ?? 'off')}
+            onValueChange={(value) =>
+              actions.updateSettings({
+                turnSeconds: value === 'off' ? null : (Number(value) as 15 | 30 | 60),
+              })
+            }
+          >
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="15">15 วินาที</SelectItem>
+              <SelectItem value="30">30 วินาที</SelectItem>
+              <SelectItem value="60">60 วินาที</SelectItem>
+              <SelectItem value="off">ไม่จับเวลา</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="space-y-1.5">
+          <Label>เล่นถึงกี่แต้ม</Label>
+          <Select
+            value={String(settings.targetScore)}
+            onValueChange={(value) =>
+              actions.updateSettings({ targetScore: Number(value) as 50 | 100 | 200 })
+            }
+          >
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="50">50 แต้ม — สั้น</SelectItem>
+              <SelectItem value="100">100 แต้ม</SelectItem>
+              <SelectItem value="200">200 แต้ม — ยาว</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+    </section>
+  )
+}
+
+function SlaveRoomSettings({
+  settings,
+  actions,
+}: {
+  settings: SlaveSettings
+  actions: RoomActions
+}) {
   return (
     <section className="sticker space-y-4 rounded-3xl bg-card p-4">
       <h2 className="font-bold text-base">กติกาห้อง</h2>
