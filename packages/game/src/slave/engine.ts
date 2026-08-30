@@ -493,9 +493,3 @@ export function canPass(state: SlaveState, playerId: PlayerId): boolean {
     state.phase === 'playing' && state.currentPlayer === playerId && state.trick.current !== null
   )
 }
-
-export function handCounts(state: SlaveState): Record<PlayerId, number> {
-  const counts: Record<PlayerId, number> = {}
-  for (const player of state.players) counts[player.id] = (state.hands[player.id] ?? []).length
-  return counts
-}
