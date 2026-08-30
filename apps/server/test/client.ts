@@ -102,7 +102,8 @@ export function greedyTurn(client: TestClient): void {
     return
   }
 
-  const required = view.trick.count ?? 1
+  const table = view.table
+  const required = table.game === 'slave' ? (table.trick.count ?? 1) : 1
   const first = you.hand.find((card) => playable.includes(card.id))
   const set = you.hand
     .filter((card) => card.rank === first?.rank && playable.includes(card.id))

@@ -92,7 +92,11 @@ describe('a full round with three humans', () => {
 
     const view = alice.view
     expect(view?.standings).toHaveLength(3)
-    expect(view?.seats.every((seat) => seat.role !== null)).toBe(true)
+    const table = view?.table
+    expect(table?.game).toBe('slave')
+    expect(
+      view?.seats.every((seat) => (table?.game === 'slave' ? table.roles[seat.id] : null) != null),
+    ).toBe(true)
     expect(view?.history).toHaveLength(1)
     // Points are playerCount - position: 2 / 1 / 0.
     expect(view?.standings.map((row) => row.score).sort()).toEqual([0, 1, 2])
@@ -215,8 +219,10 @@ describe('bots', () => {
 
     // Whatever the roles are, the exchange must resolve without a human unless
     // the human is the one holding the choice.
-    if (host.view?.phase === 'exchange' && host.view.exchange?.give !== null) {
-      const give = host.view.exchange?.give ?? 0
+    const hostTable = host.view?.table
+    const hostExchange = hostTable?.game === 'slave' ? hostTable.exchange : null
+    if (host.view?.phase === 'exchange' && hostExchange?.give != null) {
+      const give = hostExchange.give
       const cardIds = (host.view.you?.hand ?? []).slice(0, give).map((card) => card.id)
       host.send({ type: 'exchange', payload: { cardIds } })
     }
