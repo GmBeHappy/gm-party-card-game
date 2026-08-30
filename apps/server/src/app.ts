@@ -1,5 +1,11 @@
-import { DEFAULT_SLAVE_SETTINGS, type GameEvent, MAX_PLAYERS } from '@cards/game'
-import { clientMessageSchema, ERROR_MESSAGES, type ErrorCode, roomCodeSchema } from '@cards/shared'
+import { GAME_META, type GameEvent } from '@cards/game'
+import {
+  clientMessageSchema,
+  createRoomSchema,
+  ERROR_MESSAGES,
+  type ErrorCode,
+  roomCodeSchema,
+} from '@cards/shared'
 import { cors } from '@elysiajs/cors'
 import { Elysia } from 'elysia'
 import { generateRoomCode } from './codes'
@@ -18,6 +24,7 @@ import {
   scheduleTimers,
   seated,
   send,
+  setGame,
   setReady,
   shuffleSeats,
   startMatch,
@@ -66,10 +73,13 @@ export function createApp() {
     .use(cors({ origin: true }))
     .get('/health', () => ({ ok: true, service: 'slave-card-game', rooms: store.all().length }))
 
-    .post('/rooms', () => {
+    .post('/rooms', ({ body, status }) => {
+      const parsed = createRoomSchema.safeParse(body ?? {})
+      if (!parsed.success) return status(400, { error: 'invalid-game' as const })
+      const game = parsed.data.game ?? 'slave'
       const code = generateRoomCode((candidate) => store.has(candidate))
-      store.create(code, DEFAULT_SLAVE_SETTINGS)
-      return { code }
+      store.create(code, game)
+      return { code, game }
     })
 
     // Powers the inline errors on the join form, before any socket is opened.
@@ -84,13 +94,15 @@ export function createApp() {
 
       const players = seated(room)
       const inLobby = room.state.phase === 'lobby'
-      const full = players.length >= MAX_PLAYERS
+      const maxPlayers = GAME_META[room.state.game].maxPlayers
+      const full = players.length >= maxPlayers
       return {
         exists: true,
         code: room.code,
+        game: room.state.game,
         phase: room.state.phase,
         players: players.length,
-        maxPlayers: MAX_PLAYERS,
+        maxPlayers,
         canJoin: inLobby && !full,
         reason: inLobby ? (full ? ('room-full' as const) : null) : ('match-in-progress' as const),
       }
@@ -205,6 +217,9 @@ function handle(
       return
     case 'settings':
       resolve(updateSettings(room, playerId, message.payload))
+      return
+    case 'setGame':
+      resolve(setGame(room, playerId, message.payload.game))
       return
     case 'addBot':
       resolve(addBot(room, playerId))

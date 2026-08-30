@@ -1,20 +1,20 @@
 import {
   type Action,
   type ActionError,
-  chooseBotAction,
-  chooseBotExchange,
-  createInitialState,
+  applySettingsIn,
+  botActionFor,
   createRng,
+  createStateFor,
+  GAME_META,
   type GameEvent,
+  type GameKind,
   type GameState,
-  MAX_PLAYERS,
-  MIN_PLAYERS,
   type Player,
   type PlayerId,
-  reduce,
-  type SlaveSettings,
-  seatPlayers,
-  setConnected,
+  reduceGame,
+  seatPlayersIn,
+  setConnectedIn,
+  waitingOnIn,
 } from '@cards/game'
 import {
   buildRoomView,
@@ -23,7 +23,15 @@ import {
   type RoomView,
   type ServerMessage,
   type SettingsPatch,
+  slaveSettingsPatchSchema,
 } from '@cards/shared'
+
+/**
+ * A settings patch arrives loosely typed and is re-parsed here with the active
+ * game's strict schema, so one game's key can never land in another's room.
+ */
+const SETTINGS_SCHEMAS = { slave: slaveSettingsPatchSchema } as const
+
 import { generatePlayerId } from './codes'
 import { timings } from './config'
 
@@ -58,13 +66,13 @@ export type RoomResult<T = undefined> = { ok: true; value: T } | { ok: false; co
 
 const BOT_NAMES = ['หมี', 'แมว', 'กระต่าย', 'หมา', 'นก', 'ปลา'] as const
 
-export function createRoom(code: string, settings: SlaveSettings): Room {
+export function createRoom(code: string, game: GameKind): Room {
   const now = Date.now()
   return {
     code,
     hostId: null,
     members: [],
-    state: createInitialState([], settings),
+    state: createStateFor(game, []),
     createdAt: now,
     lastActivity: now,
     turnTimer: null,
@@ -73,6 +81,9 @@ export function createRoom(code: string, settings: SlaveSettings): Room {
 }
 
 // ------------------------------------------------------------------ members
+
+/** The seat limit of whichever game this room is currently set to. */
+export const maxSeats = (room: Room): number => GAME_META[room.state.game].maxPlayers
 
 export const seated = (room: Room): Member[] => room.members.filter((m) => m.seated)
 export const waiting = (room: Room): Member[] => room.members.filter((m) => !m.seated)
@@ -108,7 +119,7 @@ function toPlayer(member: Member): Player {
 
 /** Push the seat list into the game state. Safe only between rounds. */
 function syncPlayers(room: Room): void {
-  room.state = seatPlayers(room.state, seated(room).map(toPlayer))
+  room.state = seatPlayersIn(room.state, seated(room).map(toPlayer))
 }
 
 /** Names are unique per room, so seats are never ambiguous at a glance. */
@@ -168,15 +179,15 @@ export function join(room: Room, input: JoinInput): RoomResult<Member> {
     if (existing !== undefined) {
       existing.sockets.add(input.socket)
       existing.lastSeen = Date.now()
-      room.state = setConnected(room.state, existing.id, true)
+      room.state = setConnectedIn(room.state, existing.id, true)
       if (room.hostId === null) room.hostId = existing.id
       return { ok: true, value: existing }
     }
   }
 
   const inLobby = room.state.phase === 'lobby'
-  if (inLobby && seated(room).length >= MAX_PLAYERS) return { ok: false, code: 'room-full' }
-  if (!inLobby && room.members.length >= MAX_PLAYERS * 2) {
+  if (inLobby && seated(room).length >= maxSeats(room)) return { ok: false, code: 'room-full' }
+  if (!inLobby && room.members.length >= maxSeats(room) * 2) {
     return { ok: false, code: 'room-full' }
   }
 
@@ -204,7 +215,7 @@ export function detach(room: Room, playerId: PlayerId, socket: Socket): void {
   room.lastActivity = Date.now()
   if (member.sockets.size > 0) return
 
-  room.state = setConnected(room.state, playerId, false)
+  room.state = setConnectedIn(room.state, playerId, false)
 
   // A seat is never forfeited mid-match, but the host role moves on.
   if (room.hostId === playerId) migrateHost(room)
@@ -244,15 +255,31 @@ export function updateSettings(room: Room, playerId: PlayerId, patch: SettingsPa
   if (!host.ok) return host
   if (room.state.phase !== 'lobby') return { ok: false, code: 'wrong-phase' }
 
-  const current = room.state.settings
-  const settings: SlaveSettings = {
-    eightCut: patch.eightCut ?? current.eightCut,
-    revolution: patch.revolution ?? current.revolution,
-    turnSeconds: patch.turnSeconds === undefined ? current.turnSeconds : patch.turnSeconds,
-    totalRounds: patch.totalRounds === undefined ? current.totalRounds : patch.totalRounds,
+  const parsed = SETTINGS_SCHEMAS[room.state.game].safeParse(patch)
+  if (!parsed.success) return { ok: false, code: 'invalid-settings' }
+
+  room.state = applySettingsIn(room.state, parsed.data)
+  return { ok: true, value: undefined }
+}
+
+/**
+ * Swap the room's game in the lobby. Settings reset to the new game's defaults,
+ * and any seat past its limit becomes a waiting player rather than being kicked
+ * — nobody gets ejected because the host changed their mind.
+ */
+export function setGame(room: Room, playerId: PlayerId, game: GameKind): RoomResult {
+  const host = requireHost(room, playerId)
+  if (!host.ok) return host
+  if (room.state.phase !== 'lobby') return { ok: false, code: 'wrong-phase' }
+  const limit = GAME_META[game].maxPlayers
+  if (room.state.game === game) return { ok: true, value: undefined }
+
+  for (const member of seated(room).slice(limit)) {
+    member.seated = false
+    member.ready = false
   }
 
-  room.state = { ...room.state, settings, version: room.state.version + 1 }
+  room.state = createStateFor(game, seated(room).map(toPlayer))
   return { ok: true, value: undefined }
 }
 
@@ -260,7 +287,7 @@ export function addBot(room: Room, playerId: PlayerId): RoomResult {
   const host = requireHost(room, playerId)
   if (!host.ok) return host
   if (room.state.phase !== 'lobby') return { ok: false, code: 'wrong-phase' }
-  if (seated(room).length >= MAX_PLAYERS) return { ok: false, code: 'room-full' }
+  if (seated(room).length >= maxSeats(room)) return { ok: false, code: 'room-full' }
 
   const used = new Set(room.members.map((member) => member.name))
   const name = BOT_NAMES.find((candidate) => !used.has(`บอท${candidate}`)) ?? 'บอท'
@@ -319,7 +346,9 @@ export function startMatch(room: Room, playerId: PlayerId): RoomResult<readonly 
   if (!host.ok) return host
 
   const players = seated(room)
-  if (players.length < MIN_PLAYERS) return { ok: false, code: 'not-enough-players' }
+  if (players.length < GAME_META[room.state.game].minPlayers) {
+    return { ok: false, code: 'not-enough-players' }
+  }
   const humansReady = players.every((member) => member.isBot || member.ready)
   if (!humansReady) return { ok: false, code: 'wrong-phase' }
 
@@ -335,14 +364,14 @@ export function rematch(room: Room, playerId: PlayerId): RoomResult {
 
   promoteWaiting(room)
   for (const member of room.members) member.ready = member.isBot
-  room.state = createInitialState(seated(room).map(toPlayer), room.state.settings)
+  room.state = createStateFor(room.state.game, seated(room).map(toPlayer))
   return { ok: true, value: undefined }
 }
 
 /** Seat everyone who joined mid-match, up to the table limit. */
 function promoteWaiting(room: Room): void {
   for (const member of waiting(room)) {
-    if (seated(room).length >= MAX_PLAYERS) break
+    if (seated(room).length >= maxSeats(room)) break
     member.seated = true
     member.ready = true
   }
@@ -367,7 +396,10 @@ const ENGINE_ERRORS: ReadonlySet<string> = new Set<ActionError>([
 export function dispatch(room: Room, action: Action): RoomResult<readonly GameEvent[]> {
   if (action.type === 'nextRound') promoteWaiting(room)
 
-  const result = reduce(room.state, action, { now: Date.now(), rng: createRng(Date.now() >>> 0) })
+  const result = reduceGame(room.state, action, {
+    now: Date.now(),
+    rng: createRng(Date.now() >>> 0),
+  })
   if (!result.ok) {
     const code = ENGINE_ERRORS.has(result.error) ? (result.error as ErrorCode) : 'internal'
     return { ok: false, code }
@@ -402,15 +434,17 @@ export function scheduleTimers(room: Room, onChange: (events: readonly GameEvent
     scheduleTimers(room, onChange)
   }
 
-  if (state.phase === 'exchange' && state.exchange !== null) {
-    const pending = state.exchange.transfers.filter((transfer) => transfer.cards === null)
-    const botTurn = pending.find((transfer) => findMember(room, transfer.from)?.isBot === true)
-    if (botTurn !== undefined) {
-      room.botTimer = setTimeout(
-        () => run(chooseBotExchange(state, botTurn.from, botTurn.count)),
-        timings.botDelayMs,
-      )
-      return
+  // A simultaneous phase — a tribute, a pass. Bots answer first, then the
+  // whole phase times out for whoever is left.
+  const pending = waitingOnIn(state)
+  if (pending.length > 0) {
+    const botSeat = pending.find((id) => findMember(room, id)?.isBot === true)
+    if (botSeat !== undefined) {
+      const action = botActionFor(state, botSeat)
+      if (action !== null) {
+        room.botTimer = setTimeout(() => run(action), timings.botDelayMs)
+        return
+      }
     }
     if (state.phaseDeadline !== null) {
       room.turnTimer = setTimeout(
@@ -425,11 +459,11 @@ export function scheduleTimers(room: Room, onChange: (events: readonly GameEvent
 
   const member = findMember(room, state.currentPlayer)
   if (member?.isBot === true) {
-    room.botTimer = setTimeout(
-      () => run(chooseBotAction(room.state, member.id)),
-      timings.botDelayMs,
-    )
-    return
+    const action = botActionFor(state, member.id)
+    if (action !== null) {
+      room.botTimer = setTimeout(() => run(action), timings.botDelayMs)
+      return
+    }
   }
 
   const deadlines: number[] = []
@@ -440,6 +474,8 @@ export function scheduleTimers(room: Room, onChange: (events: readonly GameEvent
   }
   if (deadlines.length === 0) return
 
-  const at = Math.min(...deadlines)
-  room.turnTimer = setTimeout(() => run({ type: 'timeout' }), Math.max(0, at - now))
+  room.turnTimer = setTimeout(
+    () => run({ type: 'timeout' }),
+    Math.max(0, Math.min(...deadlines) - now),
+  )
 }

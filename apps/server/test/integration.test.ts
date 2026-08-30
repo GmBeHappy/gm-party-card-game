@@ -271,3 +271,49 @@ describe('protocol guards', () => {
     host.disconnect()
   })
 })
+
+describe('choosing a game', () => {
+  it('defaults a room to slave', async () => {
+    const code = await createRoom()
+    const info = await fetch(`${base}/rooms/${code}`).then((r) => r.json())
+    expect(info).toMatchObject({ exists: true, game: 'slave', maxPlayers: 6 })
+  })
+
+  it('creates a room for an explicitly requested game', async () => {
+    const response = await fetch(`${base}/rooms`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ game: 'slave' }),
+    })
+    const { code } = (await response.json()) as { code: string }
+    const info = (await fetch(`${base}/rooms/${code}`).then((r) => r.json())) as { game: string }
+    expect(info.game).toBe('slave')
+  })
+
+  it('refuses an unknown game', async () => {
+    const response = await fetch(`${base}/rooms`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ game: 'poker' }),
+    })
+    expect(response.status).toBe(400)
+  })
+
+  it('lets only the host change the game, and only in the lobby', async () => {
+    const code = await createRoom()
+    const host = new TestClient(wsUrl, 'Host')
+    const guest = new TestClient(wsUrl, 'Guest')
+    await host.connect(code)
+    await guest.connect(code)
+    await until(() => host.view?.seats.length === 2, 'both seated')
+
+    guest.send({ type: 'setGame', payload: { game: 'slave' } })
+    await until(() => guest.errors.includes('not-host'), 'guest refused')
+
+    host.send({ type: 'setGame', payload: { game: 'slave' } })
+    await until(() => host.view?.game === 'slave', 'game applied')
+
+    host.disconnect()
+    guest.disconnect()
+  })
+})

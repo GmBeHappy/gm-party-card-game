@@ -1,3 +1,4 @@
+import { GAME_KINDS, type GameKind } from '@cards/game'
 import { z } from 'zod'
 
 export const ROOM_CODE_LENGTH = 6
@@ -13,12 +14,26 @@ export const roomCodeSchema = z
 
 export const nameSchema = z.string().trim().min(2).max(16)
 
-export const settingsPatchSchema = z.object({
-  eightCut: z.boolean().optional(),
-  revolution: z.boolean().optional(),
-  turnSeconds: z.union([z.literal(15), z.literal(30), z.literal(60), z.null()]).optional(),
-  totalRounds: z.union([z.literal(3), z.literal(5), z.literal(10), z.null()]).optional(),
-})
+export const gameKindSchema = z.enum(GAME_KINDS as unknown as [GameKind, ...GameKind[]])
+
+export const createRoomSchema = z.object({ game: gameKindSchema.optional() })
+
+/** Daifugō's settings. Strict, so an unknown key is a rejected patch. */
+export const slaveSettingsPatchSchema = z
+  .object({
+    eightCut: z.boolean().optional(),
+    revolution: z.boolean().optional(),
+    turnSeconds: z.union([z.literal(15), z.literal(30), z.literal(60), z.null()]).optional(),
+    totalRounds: z.union([z.literal(3), z.literal(5), z.literal(10), z.null()]).optional(),
+  })
+  .strict()
+
+/**
+ * The wire accepts any settings-shaped object; `updateSettings` re-parses it
+ * with the active game's strict schema, so one game's key cannot land in
+ * another game's room.
+ */
+export const settingsPatchSchema = z.record(z.string(), z.unknown())
 
 export type SettingsPatch = z.infer<typeof settingsPatchSchema>
 
@@ -36,6 +51,7 @@ export const clientMessageSchema = z.discriminatedUnion('type', [
   z.object({ type: z.literal('ready'), payload: z.object({ ready: z.boolean() }) }),
   z.object({ type: z.literal('start'), payload: z.object({}).optional() }),
   z.object({ type: z.literal('settings'), payload: settingsPatchSchema }),
+  z.object({ type: z.literal('setGame'), payload: z.object({ game: gameKindSchema }) }),
   z.object({ type: z.literal('addBot'), payload: z.object({}).optional() }),
   z.object({ type: z.literal('removeSeat'), payload: z.object({ playerId: z.string().max(64) }) }),
   z.object({ type: z.literal('shuffleSeats'), payload: z.object({}).optional() }),
@@ -73,6 +89,12 @@ export const ERROR_CODES = [
   'no-pending-exchange',
   'wrong-card-count',
   'not-enough-players',
+  'invalid-settings',
+  'must-follow-suit',
+  'must-lead-clubs-two',
+  'hearts-not-broken',
+  'no-points-first-trick',
+  'wrong-game',
   'internal',
 ] as const
 
@@ -98,5 +120,11 @@ export const ERROR_MESSAGES: Readonly<Record<ErrorCode, string>> = {
   'no-pending-exchange': 'คุณไม่มีไพ่ที่ต้องแลก',
   'wrong-card-count': 'จำนวนไพ่ไม่ถูกต้อง',
   'not-enough-players': 'ต้องมีผู้เล่นอย่างน้อย 3 คนถึงจะเริ่มได้',
+  'invalid-settings': 'ตั้งค่านี้ไม่ถูกต้อง',
+  'must-follow-suit': 'ต้องลงไพ่ดอกเดียวกับที่นำ',
+  'must-lead-clubs-two': 'ตาแรกต้องนำด้วยดอกจิก 2',
+  'hearts-not-broken': 'ยังนำโพแดงไม่ได้ ต้องมีคนทิ้งโพแดงก่อน',
+  'no-points-first-trick': 'ตาแรกลงไพ่ที่มีแต้มไม่ได้',
+  'wrong-game': 'ทำแบบนี้ในเกมนี้ไม่ได้',
   internal: 'เซิร์ฟเวอร์มีปัญหา',
 }
