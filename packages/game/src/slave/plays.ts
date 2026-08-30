@@ -1,5 +1,6 @@
-import { strength } from './cards'
-import { type Card, EIGHT_RANK, type Play, type PlayKind, type RoomSettings } from './types'
+import type { Card } from '../core/card'
+import { strength } from './order'
+import { EIGHT_RANK, type Play, type PlayKind, type RoomSettings } from './types'
 
 const KINDS: Readonly<Record<number, PlayKind>> = {
   1: 'single',

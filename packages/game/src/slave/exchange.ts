@@ -1,6 +1,8 @@
-import { sortHand, strength } from './cards'
+import type { Card } from '../core/card'
+import type { PlayerId } from '../core/player'
+import { sortHand, strength } from './order'
 import { findByRole } from './roles'
-import type { Card, ExchangeTransfer, PlayerId, RoleName } from './types'
+import type { ExchangeTransfer, RoleName } from './types'
 
 /** How many cards each role pair swaps. */
 const PAIRS: readonly {

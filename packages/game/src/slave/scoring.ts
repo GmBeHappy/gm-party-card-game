@@ -1,4 +1,4 @@
-import type { PlayerId } from './types'
+import type { PlayerId } from '../core/player'
 
 /**
  * Points for a round: finishing first in an n-player game is worth n-1,

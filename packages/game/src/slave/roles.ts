@@ -1,4 +1,5 @@
-import type { PlayerId, RoleName } from './types'
+import type { PlayerId } from '../core/player'
+import type { RoleName } from './types'
 
 /**
  * Map a finishing order onto roles.

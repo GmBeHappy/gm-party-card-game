@@ -1,7 +1,8 @@
-import { sortHand, strength } from './cards'
+import type { PlayerId } from '../core/player'
 import type { Action } from './engine'
+import { sortHand, strength } from './order'
 import { legalPlays } from './plays'
-import type { GameState, Play, PlayerId } from './types'
+import type { GameState, Play } from './types'
 
 /** A 2 (or a 3 under revolution) is worth hoarding rather than spending. */
 function isPremium(play: Play, revolution: boolean): boolean {

@@ -1,5 +1,4 @@
 import { describe, expect, it } from 'vitest'
-import { sortHand } from '../src/cards'
 import {
   type ActionResult,
   canPass,
@@ -11,7 +10,8 @@ import {
   seatPlayers,
   setConnected,
 } from '../src/index'
-import { DEFAULT_SETTINGS } from '../src/types'
+import { sortHand } from '../src/slave/order'
+import { DEFAULT_SETTINGS } from '../src/slave/types'
 import { cards, ctx, ids, makePlayers, playingState } from './helpers'
 
 function unwrap(result: ActionResult): GameState {

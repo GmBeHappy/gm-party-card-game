@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { chooseBotAction, chooseBotExchange } from '../src/bot'
-import { reduce } from '../src/engine'
+import { chooseBotAction, chooseBotExchange } from '../src/slave/bot'
+import { reduce } from '../src/slave/engine'
 import { cards, ctx, playingState } from './helpers'
 
 describe('chooseBotAction', () => {

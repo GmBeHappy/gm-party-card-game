@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
-import { createDeck, deal, shuffle, sortHand, strength } from '../src/cards'
-import { createRng } from '../src/rng'
+import { createDeck, deal, shuffle } from '../src/core/card'
+import { createRng } from '../src/core/rng'
+import { sortHand, strength } from '../src/slave/order'
 import { c, ids } from './helpers'
 
 describe('deck', () => {

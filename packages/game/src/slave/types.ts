@@ -1,27 +1,11 @@
-/** Suits, ordered weakest → strongest for tie-breaking within a rank. */
-export type Suit = 'C' | 'D' | 'H' | 'S'
+import type { Card, CardRank } from '../core/card'
+import type { Phase, RoundResult } from '../core/phase'
+import type { Player, PlayerId } from '../core/player'
 
-export const SUITS: readonly Suit[] = ['C', 'D', 'H', 'S'] as const
-
-/**
- * Numeric card ranks. 3 is the weakest card and 15 is the `2`, the strongest.
- * Using numbers keeps comparison arithmetic trivial. This deck has no Jokers.
- */
-export type CardRank = 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15
-
+/** Daifugō's own rank constants. The deck itself has no opinion about these. */
 export const TWO_RANK = 15 as const
 export const EIGHT_RANK = 8 as const
 export const THREE_RANK = 3 as const
-
-/** Every rank in the deck, weakest first. */
-export const RANKS: readonly CardRank[] = [3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15] as const
-
-export interface Card {
-  /** Stable identity, unique within a deck: `3S`, `10H`. */
-  readonly id: string
-  readonly rank: CardRank
-  readonly suit: Suit
-}
 
 export type PlayKind = 'single' | 'pair' | 'triple' | 'quad'
 
@@ -32,8 +16,6 @@ export interface Play {
   readonly rank: CardRank
   readonly cards: readonly Card[]
 }
-
-export type PlayerId = string
 
 export type RoleName = 'president' | 'vicePresident' | 'citizen' | 'viceSlave' | 'slave'
 
@@ -53,13 +35,6 @@ export const DEFAULT_SETTINGS: RoomSettings = {
   revolution: true,
   turnSeconds: 30,
   totalRounds: 5,
-}
-
-export interface Player {
-  readonly id: PlayerId
-  readonly name: string
-  readonly isBot: boolean
-  readonly connected: boolean
 }
 
 export interface Trick {
@@ -85,14 +60,6 @@ export interface ExchangeState {
   readonly transfers: readonly ExchangeTransfer[]
   readonly deadline: number | null
 }
-
-export interface RoundResult {
-  readonly round: number
-  readonly finishOrder: readonly PlayerId[]
-  readonly points: Readonly<Record<PlayerId, number>>
-}
-
-export type Phase = 'lobby' | 'exchange' | 'playing' | 'roundEnd' | 'matchEnd'
 
 export interface GameState {
   readonly phase: Phase

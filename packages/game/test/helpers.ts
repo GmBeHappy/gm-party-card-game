@@ -1,14 +1,9 @@
-import { createDeck } from '../src/cards'
-import { createInitialState } from '../src/engine'
-import { createRng } from '../src/rng'
-import {
-  type Card,
-  DEFAULT_SETTINGS,
-  type GameState,
-  type Player,
-  type PlayerId,
-  type RoomSettings,
-} from '../src/types'
+import type { Card } from '../src/core/card'
+import { createDeck } from '../src/core/card'
+import type { Player, PlayerId } from '../src/core/player'
+import { createRng } from '../src/core/rng'
+import { createInitialState } from '../src/slave/engine'
+import { DEFAULT_SETTINGS, type GameState, type RoomSettings } from '../src/slave/types'
 
 const DECK = createDeck()
 

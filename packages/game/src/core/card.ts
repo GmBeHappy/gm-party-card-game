@@ -1,5 +1,25 @@
 import type { Rng } from './rng'
-import { type Card, type CardRank, RANKS, SUITS } from './types'
+
+/** Suits, ordered weakest → strongest for tie-breaking within a rank. */
+export type Suit = 'C' | 'D' | 'H' | 'S'
+
+export const SUITS: readonly Suit[] = ['C', 'D', 'H', 'S'] as const
+
+/**
+ * Numeric card ranks. 3 is the weakest card and 15 is the `2`, the strongest.
+ * Using numbers keeps comparison arithmetic trivial. This deck has no Jokers.
+ */
+export type CardRank = 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15
+
+/** Every rank in the deck, weakest first. */
+export const RANKS: readonly CardRank[] = [3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15] as const
+
+export interface Card {
+  /** Stable identity, unique within a deck: `3S`, `10H`. */
+  readonly id: string
+  readonly rank: CardRank
+  readonly suit: Suit
+}
 
 const RANK_LABELS: Readonly<Record<number, string>> = {
   11: 'J',
@@ -53,18 +73,4 @@ export function deal(deck: readonly Card[], playerCount: number): Card[][] {
     hands[index % playerCount]?.push(card)
   })
   return hands
-}
-
-/** Effective strength under the current revolution state. */
-export function strength(card: Card, revolution: boolean): number {
-  return revolution ? -card.rank : card.rank
-}
-
-/** Sort by play strength, then by suit, so hands render in a stable order. */
-export function sortHand(cards: readonly Card[], revolution = false): Card[] {
-  return [...cards].sort((a, b) => {
-    const diff = strength(a, revolution) - strength(b, revolution)
-    if (diff !== 0) return diff
-    return SUITS.indexOf(a.suit) - SUITS.indexOf(b.suit)
-  })
 }

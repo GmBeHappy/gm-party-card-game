@@ -6,8 +6,8 @@ import {
   isEightCut,
   isRevolutionPlay,
   legalPlays,
-} from '../src/plays'
-import { DEFAULT_SETTINGS, type Play, type RoomSettings } from '../src/types'
+} from '../src/slave/plays'
+import { DEFAULT_SETTINGS, type Play, type RoomSettings } from '../src/slave/types'
 import { c, cards } from './helpers'
 
 const S = DEFAULT_SETTINGS

@@ -5,8 +5,8 @@ import {
   pendingTransfers,
   strongestCards,
   weakestCards,
-} from '../src/exchange'
-import { assignRoles } from '../src/roles'
+} from '../src/slave/exchange'
+import { assignRoles } from '../src/slave/roles'
 import { cards, ids } from './helpers'
 
 describe('card picking', () => {
