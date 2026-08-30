@@ -17,7 +17,8 @@ import type { RoomActions } from '@/lib/use-room'
  * time this renders — the only choice on the table is the President's.
  */
 export function ExchangeScreen({ view, actions }: { view: RoomView; actions: RoomActions }) {
-  const exchange = view.exchange
+  const table = view.table
+  const exchange = table.game === 'slave' ? table.exchange : null
   const you = view.you
   const roundKey = String(view.round)
   const [selection, setSelection] = useState<{ key: string; ids: string[] }>({
@@ -26,9 +27,10 @@ export function ExchangeScreen({ view, actions }: { view: RoomView; actions: Roo
   })
   const selected = selection.key === roundKey ? selection.ids : []
   const setSelected = (ids: string[]) => setSelection({ key: roundKey, ids })
-  const remaining = useCountdown(exchange?.deadline ?? null)
+  const remaining = useCountdown(view.phaseDeadline)
 
-  if (exchange === null || you === null) return null
+  if (exchange === null || you === null || table.game !== 'slave') return null
+  const myRole = table.roles[you.id] ?? null
 
   const give = exchange.give
   const hand = you.hand
@@ -45,9 +47,9 @@ export function ExchangeScreen({ view, actions }: { view: RoomView; actions: Roo
         <h1 className="ink-edge font-display text-5xl text-lemon drop-shadow-[4px_4px_0_var(--ink)]">
           ส่งส่วย
         </h1>
-        {you.role !== null && (
+        {myRole !== null && (
           <div className="flex justify-center pt-1">
-            <RoleBadge role={you.role} />
+            <RoleBadge role={myRole} />
           </div>
         )}
         {remaining !== null && (

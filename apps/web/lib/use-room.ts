@@ -1,6 +1,6 @@
 'use client'
 
-import type { GameEvent } from '@cards/game'
+import type { GameEvent, GameKind } from '@cards/game'
 import type { ErrorCode, RoomView, SettingsPatch } from '@cards/shared'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { WS_URL } from './config'
@@ -26,6 +26,7 @@ export interface RoomActions {
   removeSeat(playerId: string): void
   shuffleSeats(): void
   updateSettings(patch: SettingsPatch): void
+  setGame(game: GameKind): void
   play(cardIds: readonly string[]): void
   pass(): void
   exchange(cardIds: readonly string[]): void
@@ -126,6 +127,7 @@ export function useRoom(roomCode: string, name: string | null): UseRoom {
       removeSeat: (playerId) => send.current?.send({ type: 'removeSeat', payload: { playerId } }),
       shuffleSeats: () => send.current?.send({ type: 'shuffleSeats' }),
       updateSettings: (patch) => send.current?.send({ type: 'settings', payload: patch }),
+      setGame: (game) => send.current?.send({ type: 'setGame', payload: { game } }),
       play: (cardIds) => send.current?.send({ type: 'play', payload: { cardIds: [...cardIds] } }),
       pass: () => send.current?.send({ type: 'pass' }),
       exchange: (cardIds) =>

@@ -1,6 +1,6 @@
 'use client'
 
-import { MAX_PLAYERS, MIN_PLAYERS } from '@cards/game'
+import { GAME_META } from '@cards/game'
 import type { RoomView } from '@cards/shared'
 import { Bot, Check, Copy, Crown, Shuffle, UserMinus } from 'lucide-react'
 import { AnimatePresence, motion } from 'motion/react'
@@ -23,10 +23,11 @@ export function LobbyScreen({ view, actions }: { view: RoomView; actions: RoomAc
   const [copied, setCopied] = useState(false)
   const you = view.you
   const isHost = you?.isHost === true
+  const { minPlayers, maxPlayers } = GAME_META[view.game]
   const seated = view.seats.length
   const humans = view.seats.filter((seat) => !seat.isBot)
   const allReady = humans.every((seat) => seat.ready)
-  const canStart = isHost && seated >= MIN_PLAYERS && allReady
+  const canStart = isHost && seated >= minPlayers && allReady
 
   async function copyLink() {
     try {
@@ -54,7 +55,7 @@ export function LobbyScreen({ view, actions }: { view: RoomView; actions: RoomAc
           <h2 className="font-extrabold text-base">
             ผู้เล่น{' '}
             <span className="text-muted-foreground">
-              {seated}/{MAX_PLAYERS}
+              {seated}/{maxPlayers}
             </span>
           </h2>
           {isHost && (
@@ -62,7 +63,7 @@ export function LobbyScreen({ view, actions }: { view: RoomView; actions: RoomAc
               <Button
                 variant="ghost"
                 size="sm"
-                disabled={seated >= MAX_PLAYERS}
+                disabled={seated >= maxPlayers}
                 onClick={actions.addBot}
               >
                 <Bot className="size-3.5" /> เพิ่มบอท
@@ -147,8 +148,10 @@ export function LobbyScreen({ view, actions }: { view: RoomView; actions: RoomAc
 
         {isHost && !canStart && (
           <p className="text-center text-muted-foreground text-xs">
-            {seated < MIN_PLAYERS
-              ? `ต้องมีอย่างน้อย ${MIN_PLAYERS} คน เพิ่มบอทเติมที่นั่งก็ได้`
+            {seated < minPlayers
+              ? minPlayers === maxPlayers
+                ? `ต้องมี ${minPlayers} คนพอดี เพิ่มบอทเติมที่นั่งก็ได้`
+                : `ต้องมีอย่างน้อย ${minPlayers} คน เพิ่มบอทเติมที่นั่งก็ได้`
               : 'รอให้ทุกคนกดพร้อมก่อน'}
           </p>
         )}

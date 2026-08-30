@@ -45,16 +45,28 @@ export interface SeatProps {
   progress: number | null
   urgent: boolean
   compact?: boolean
+  /** Daifugō only — Hearts has no roles, no finishing order, and no passing. */
+  role?: RoleName | null
+  finishedPlace?: number | null
+  passed?: boolean
 }
 
-export function Seat({ seat, progress, urgent, compact = false }: SeatProps) {
+export function Seat({
+  seat,
+  progress,
+  urgent,
+  compact = false,
+  role = null,
+  finishedPlace = null,
+  passed = false,
+}: SeatProps) {
   return (
     <motion.div
       layout
       className={cn(
         'flex flex-col items-center gap-1 transition-opacity',
-        seat.passed && 'opacity-40',
-        seat.finishedPlace !== null && 'opacity-70',
+        passed && 'opacity-40',
+        finishedPlace !== null && 'opacity-70',
       )}
     >
       <div className={cn('relative', compact ? 'size-12' : 'size-14')}>
@@ -73,9 +85,9 @@ export function Seat({ seat, progress, urgent, compact = false }: SeatProps) {
             <WifiOff className="size-3 text-ink" />
           </span>
         )}
-        {seat.finishedPlace !== null && (
+        {finishedPlace !== null && (
           <span className="sticker-sm tabular -bottom-1 -right-1 absolute grid size-6 place-items-center rounded-full bg-lemon text-[11px] text-ink">
-            {seat.finishedPlace}
+            {finishedPlace}
           </span>
         )}
       </div>
@@ -86,14 +98,14 @@ export function Seat({ seat, progress, urgent, compact = false }: SeatProps) {
         <span className="truncate font-bold text-xs">{seat.name}</span>
       </div>
 
-      {seat.role !== null && <RoleBadge role={seat.role} />}
+      {role !== null && <RoleBadge role={role} />}
 
       <div className="flex items-center gap-1.5">
         <CardBackStack count={seat.handCount} />
         <span className="tabular text-[12px] text-ink">{seat.handCount}</span>
       </div>
 
-      {seat.passed && (
+      {passed && (
         <span className="sticker-sm rounded-full bg-cream px-2 font-extrabold text-[10px] text-ink uppercase tracking-wide">
           ผ่านแล้ว
         </span>

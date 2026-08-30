@@ -11,6 +11,8 @@ import { cn } from '@/lib/utils'
 
 /** Between-round scoreboard and end-of-match podium — the same table, two moods. */
 export function RoundSummary({ view, actions }: { view: RoomView; actions: RoomActions }) {
+  const table = view.table
+  const roles = table.game === 'slave' ? table.roles : {}
   const isMatchEnd = view.phase === 'matchEnd'
   const isHost = view.you?.isHost === true
   const last = view.history.at(-1)
@@ -63,9 +65,9 @@ export function RoundSummary({ view, actions }: { view: RoomView; actions: RoomA
               </div>
               <div className="min-w-0 flex-1">
                 <p className="truncate font-bold text-sm">{seat.name}</p>
-                {seat.role !== null && (
+                {roles[seat.id] !== undefined && (
                   <div className="pt-0.5">
-                    <RoleBadge role={seat.role} />
+                    <RoleBadge role={roles[seat.id]} />
                   </div>
                 )}
               </div>

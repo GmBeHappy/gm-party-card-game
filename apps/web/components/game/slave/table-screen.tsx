@@ -5,9 +5,9 @@ import { motion } from 'motion/react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Hand } from '@/components/game/hand'
 import { RoleBadge, Seat } from '@/components/game/seat'
+import { TrickPile } from '@/components/game/slave/trick-pile'
 import { SoundControls } from '@/components/game/sound-controls'
 import { type FlashKind, TableFlash } from '@/components/game/table-flash'
-import { TrickPile } from '@/components/game/trick-pile'
 import { Button } from '@/components/ui/button'
 import { isSubmittable, toggleSelection } from '@/lib/selection'
 import { sound } from '@/lib/sound'
@@ -24,12 +24,13 @@ export function TableScreen({
   actions: RoomActions
   batch: EventBatch
 }) {
+  const table = view.table
   const you = view.you
   const myTurn = view.currentPlayerId === you?.id
-  const requiredCount = view.trick.count
+  const requiredCount = table.game === 'slave' ? table.trick.count : null
   // The selection belongs to one specific turn; when the table moves on it is
   // derived away rather than cleared in an effect (no extra render pass).
-  const turnKey = `${view.round}:${view.currentPlayerId}:${view.trick.count}`
+  const turnKey = `${view.round}:${view.currentPlayerId}:${requiredCount}`
   const [selection, setSelection] = useState<{ key: string; ids: string[] }>({
     key: turnKey,
     ids: [],
@@ -71,11 +72,15 @@ export function TableScreen({
     () => view.seats.filter((seat) => seat.id !== you?.id),
     [view.seats, you?.id],
   )
-  const mySeat = view.seats.find((seat) => seat.id === you?.id) ?? null
-  const leaderName = view.seats.find((seat) => seat.id === view.trick.leaderId)?.name ?? null
+  const myRole = table.game === 'slave' ? (table.roles[you?.id ?? ''] ?? null) : null
+  const leaderName =
+    table.game === 'slave'
+      ? (view.seats.find((seat) => seat.id === table.trick.leaderId)?.name ?? null)
+      : null
 
   const hand = you?.hand ?? []
   const canPlay = myTurn && isSubmittable(hand, selected, requiredCount)
+  if (table.game !== 'slave') return null
   const stuck = myTurn && (you?.playable.length ?? 0) === 0
 
   return (
@@ -91,7 +96,7 @@ export function TableScreen({
           </span>
         </div>
         <div className="flex items-center gap-1">
-          {view.revolution && (
+          {table.revolution && (
             <motion.span
               layout
               initial={{ scale: 0.8, opacity: 0 }}
@@ -113,18 +118,25 @@ export function TableScreen({
             progress={seat.isCurrent ? progress : null}
             urgent={urgent}
             compact={opponents.length > 3}
+            role={table.roles[seat.id] ?? null}
+            finishedPlace={placeOf(table.finishOrder, seat.id)}
+            passed={table.passedIds.includes(seat.id)}
           />
         ))}
       </section>
 
       <section className="flex flex-1 items-center justify-center px-4">
-        <TrickPile cards={view.trick.cards} leaderName={leaderName} revolution={view.revolution} />
+        <TrickPile
+          cards={table.trick.cards}
+          leaderName={leaderName}
+          revolution={table.revolution}
+        />
       </section>
 
       <footer className="space-y-2 border-ink border-t-[3px] bg-rail px-4 pt-2 pb-safe">
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-2">
-            {mySeat?.role != null && <RoleBadge role={mySeat.role} />}
+            {myRole !== null && <RoleBadge role={myRole} />}
             <span className="font-semibold text-ink/70 text-xs">
               เหลือ <span className="tabular">{hand.length}</span> ใบ
             </span>
@@ -160,7 +172,7 @@ export function TableScreen({
             variant="secondary"
             className="flex-1"
             size="lg"
-            disabled={you?.canPass !== true}
+            disabled={!table.canPass}
             onClick={() => {
               setSelected([])
               actions.pass()
@@ -185,8 +197,16 @@ export function TableScreen({
   )
 }
 
+function placeOf(finishOrder: readonly string[], id: string): number | null {
+  const index = finishOrder.indexOf(id)
+  return index === -1 ? null : index + 1
+}
+
 function turnLabel(view: RoomView, myTurn: boolean): string {
-  if (myTurn) return view.trick.cards === null ? 'คุณเป็นคนนำ' : 'ตาคุณแล้ว'
+  if (myTurn) {
+    const led = view.table.game === 'slave' && view.table.trick.cards !== null
+    return led ? 'ตาคุณแล้ว' : 'คุณเป็นคนนำ'
+  }
   const current = view.seats.find((seat) => seat.id === view.currentPlayerId)
   if (current === undefined) return ''
   return current.connected ? `ตาของ ${current.name}` : `${current.name} หลุดอยู่…`
