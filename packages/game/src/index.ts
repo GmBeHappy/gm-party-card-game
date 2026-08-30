@@ -64,12 +64,20 @@ export const GAME_KINDS: readonly GameKind[] = ['slave', 'hearts'] as const
  * less than fighting the generics, and they keep every call site cast-free.
  */
 
-export function createStateFor(kind: GameKind, players: readonly Player[]): GameState {
+/**
+ * A fresh state for `kind`.
+ *
+ * `version` exists because clients drop any snapshot older than the one they
+ * already hold. Replacing a live room's state — switching game, starting a
+ * rematch — has to continue that room's version sequence, or every client
+ * silently ignores the new state and keeps showing the old one.
+ */
+export function createStateFor(kind: GameKind, players: readonly Player[], version = 0): GameState {
   switch (kind) {
     case 'slave':
-      return slaveModule.createInitialState(players, slaveModule.defaultSettings)
+      return { ...slaveModule.createInitialState(players, slaveModule.defaultSettings), version }
     case 'hearts':
-      return heartsModule.createInitialState(players, heartsModule.defaultSettings)
+      return { ...heartsModule.createInitialState(players, heartsModule.defaultSettings), version }
   }
 }
 

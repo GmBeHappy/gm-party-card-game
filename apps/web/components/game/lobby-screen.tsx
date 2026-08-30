@@ -5,6 +5,7 @@ import type { RoomView } from '@cards/shared'
 import { Bot, Check, Copy, Crown, Shuffle, UserMinus } from 'lucide-react'
 import { AnimatePresence, motion } from 'motion/react'
 import { useState } from 'react'
+import { GAME_INFO, GamePicker } from '@/components/game/game-picker'
 import { Identicon } from '@/components/game/identicon'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
@@ -49,6 +50,17 @@ export function LobbyScreen({ view, actions }: { view: RoomView; actions: RoomAc
           {copied ? 'คัดลอกแล้ว' : 'คัดลอกลิงก์ชวนเพื่อน'}
         </Button>
       </section>
+
+      {isHost ? (
+        <section className="space-y-2">
+          <h2 className="font-extrabold text-base">เกม</h2>
+          <GamePicker value={view.game} onChange={actions.setGame} />
+        </section>
+      ) : (
+        <p className="text-center font-semibold text-ink/60 text-xs">
+          กำลังจะเล่น {GAME_INFO[view.game].name}
+        </p>
+      )}
 
       <section className="space-y-3">
         <div className="flex items-center justify-between">

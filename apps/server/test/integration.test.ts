@@ -325,6 +325,41 @@ describe('choosing a game', () => {
     host.disconnect()
     guest.disconnect()
   })
+
+  it('switches a room to the other game and keeps the version climbing', async () => {
+    const code = await createRoom()
+    const host = new TestClient(wsUrl, 'Host')
+    await host.connect(code)
+    await until(() => host.view !== null, 'joined')
+
+    const before = host.view?.version ?? 0
+    expect(host.view?.game).toBe('slave')
+
+    host.send({ type: 'setGame', payload: { game: 'hearts' } })
+    await until(() => host.view?.game === 'hearts', 'switched to hearts')
+
+    expect(host.view?.table.game).toBe('hearts')
+    // A fresh state must not restart the version, or every client drops it.
+    expect(host.view?.version ?? 0).toBeGreaterThan(before)
+    host.disconnect()
+  })
+
+  it('moves overflow seats to the waiting list rather than kicking them', async () => {
+    const code = await createRoom()
+    const host = new TestClient(wsUrl, 'Host')
+    await host.connect(code)
+    await until(() => host.view !== null, 'joined')
+    // Six seats in Slave, then switch to a four-handed game.
+    for (let i = 0; i < 5; i++) host.send({ type: 'addBot' })
+    await until(() => host.view?.seats.length === 6, 'six seated')
+
+    host.send({ type: 'setGame', payload: { game: 'hearts' } })
+    await until(() => host.view?.game === 'hearts', 'switched')
+
+    expect(host.view?.seats.length).toBe(4)
+    expect(host.view?.waiting.length).toBe(2)
+    host.disconnect()
+  })
 })
 
 describe('a hearts room', () => {

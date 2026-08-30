@@ -283,7 +283,7 @@ export function setGame(room: Room, playerId: PlayerId, game: GameKind): RoomRes
     member.ready = false
   }
 
-  room.state = createStateFor(game, seated(room).map(toPlayer))
+  room.state = createStateFor(game, seated(room).map(toPlayer), room.state.version + 1)
   return { ok: true, value: undefined }
 }
 
@@ -368,7 +368,7 @@ export function rematch(room: Room, playerId: PlayerId): RoomResult {
 
   promoteWaiting(room)
   for (const member of room.members) member.ready = member.isBot
-  room.state = createStateFor(room.state.game, seated(room).map(toPlayer))
+  room.state = createStateFor(room.state.game, seated(room).map(toPlayer), room.state.version + 1)
   return { ok: true, value: undefined }
 }
 

@@ -1,9 +1,11 @@
 'use client'
 
+import type { GameKind } from '@cards/game'
 import { ROOM_CODE_LENGTH } from '@cards/shared'
 import { motion } from 'motion/react'
 import { useRouter } from 'next/navigation'
 import { type FormEvent, useEffect, useState } from 'react'
+import { GAME_INFO, GamePicker } from '@/components/game/game-picker'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -15,6 +17,7 @@ type Busy = 'create' | 'join' | null
 
 export function LandingScreen() {
   const router = useRouter()
+  const [game, setGame] = useState<GameKind>('slave')
   const [name, setName] = useState('')
   const [code, setCode] = useState('')
   const [busy, setBusy] = useState<Busy>(null)
@@ -42,7 +45,11 @@ export function LandingScreen() {
     if (!validateName()) return
     setBusy('create')
     try {
-      const response = await fetch(`${SERVER_URL}/rooms`, { method: 'POST' })
+      const response = await fetch(`${SERVER_URL}/rooms`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ game }),
+      })
       if (!response.ok) throw new Error('create failed')
       const { code: created } = (await response.json()) as { code: string }
       router.push(`/room/${created}`)
@@ -101,19 +108,26 @@ export function LandingScreen() {
         <motion.h1
           animate={{ rotate: [-2.5, 2.5, -2.5] }}
           transition={{ duration: 6, repeat: Number.POSITIVE_INFINITY, ease: 'easeInOut' }}
-          className="ink-edge font-display text-7xl text-lemon leading-none drop-shadow-[5px_5px_0_var(--ink)]"
+          className="ink-edge font-display text-6xl text-lemon leading-none drop-shadow-[5px_5px_0_var(--ink)]"
         >
-          สลาฟ
+          เล่นไพ่
         </motion.h1>
-        <p className="mt-3 font-semibold text-ink/80 text-sm">
-          ทิ้งไพ่ให้หมดมือก่อนใคร ใครหมดคนสุดท้ายต้องเป็นสลาฟ
-        </p>
+        <p className="mt-3 font-semibold text-ink/80 text-sm">เลือกเกม ตั้งห้อง ชวนเพื่อนมาเล่น</p>
       </motion.header>
+
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.05, type: 'spring', stiffness: 260, damping: 26 }}
+        className="w-full max-w-sm"
+      >
+        <GamePicker value={game} onChange={setGame} />
+      </motion.div>
 
       <motion.div
         initial={{ opacity: 0, y: 24 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.08, type: 'spring', stiffness: 260, damping: 26 }}
+        transition={{ delay: 0.12, type: 'spring', stiffness: 260, damping: 26 }}
         className="sticker w-full max-w-sm space-y-6 rounded-3xl bg-card p-6"
       >
         <div className="space-y-2">
@@ -130,7 +144,7 @@ export function LandingScreen() {
         </div>
 
         <Button className="w-full" size="lg" disabled={busy !== null} onClick={createRoom}>
-          {busy === 'create' ? 'กำลังสร้าง…' : 'สร้างห้องใหม่'}
+          {busy === 'create' ? 'กำลังสร้าง…' : `สร้างห้อง${GAME_INFO[game].name}`}
         </Button>
 
         <div className="flex items-center gap-3 text-muted-foreground text-xs">
@@ -163,10 +177,6 @@ export function LandingScreen() {
           {codeError !== null && <p className="text-destructive text-xs">{codeError}</p>}
         </form>
       </motion.div>
-
-      <p className="sticker-sm max-w-sm rounded-full bg-cream px-4 py-1.5 text-center font-semibold text-ink text-xs">
-        3–6 คน · ไพ่ 52 ใบ · เปิดกฎตัด 8 และปฏิวัติ
-      </p>
     </main>
   )
 }

@@ -59,6 +59,13 @@ describe('the hearts entry in the registry', () => {
     })
   })
 
+  it('continues a room version sequence when asked to', () => {
+    // Clients drop snapshots older than the one they hold, so a state built to
+    // replace a live one must not restart at zero.
+    expect(createStateFor('hearts', makePlayers(4), 42).version).toBe(42)
+    expect(createStateFor('slave', makePlayers(4)).version).toBe(0)
+  })
+
   it('builds a hearts lobby and starts it through the union', () => {
     const state = createStateFor('hearts', makePlayers(4))
     expect(state.game).toBe('hearts')
