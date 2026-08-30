@@ -30,6 +30,16 @@ export function useGameSound(batch: EventBatch, myId: string | null): void {
         case 'revolution':
           name = 'revolution'
           break
+        case 'trickTaken':
+          name = 'trick:taken'
+          if (event.playerId === myId && event.points > 0) sound.vibrate(40)
+          break
+        case 'heartsBroken':
+          name = 'hearts:broken'
+          break
+        case 'moonShot':
+          name = 'moon'
+          break
         case 'playerFinished':
           name = 'finish'
           break

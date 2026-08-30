@@ -15,6 +15,9 @@ export type SoundName =
   | 'tick'
   | 'eightCut'
   | 'revolution'
+  | 'trick:taken'
+  | 'hearts:broken'
+  | 'moon'
   | 'deal'
   | 'finish'
   | 'victory'
@@ -53,6 +56,22 @@ const RECIPES: Readonly<Record<SoundName, Tone[]>> = {
   revolution: [
     { freq: 1200, type: 'sawtooth', duration: 0.55, slideTo: 90, gain: 0.2 },
     { freq: 600, type: 'square', duration: 0.5, slideTo: 60, at: 0.05, gain: 0.12 },
+  ],
+  // A soft sweep down — cards being pulled toward someone.
+  'trick:taken': [
+    { freq: 520, type: 'triangle', duration: 0.14, slideTo: 300, gain: 0.12 },
+    { freq: 260, type: 'sine', duration: 0.12, at: 0.05, gain: 0.08 },
+  ],
+  // A glassy crack. Breaking hearts is the round's turning point.
+  'hearts:broken': [
+    { freq: 1500, type: 'square', duration: 0.09, slideTo: 900, gain: 0.12 },
+    { freq: 320, type: 'sawtooth', duration: 0.18, at: 0.04, gain: 0.1 },
+  ],
+  // A rising fanfare — the rarest thing that happens at this table.
+  moon: [
+    { freq: 440, type: 'triangle', duration: 0.14, gain: 0.16 },
+    { freq: 660, type: 'triangle', duration: 0.14, at: 0.12, gain: 0.16 },
+    { freq: 880, type: 'triangle', duration: 0.3, at: 0.24, gain: 0.18 },
   ],
   deal: [
     { freq: 400, type: 'triangle', duration: 0.05, gain: 0.08 },
