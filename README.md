@@ -137,3 +137,47 @@ SESSION_SECRET=change-me-in-production   # signs seat tokens
 The web app can be deployed anywhere; the game server needs a **long-running
 process** (Fly, Railway, a VPS) because it holds WebSockets and in-memory rooms.
 It will not work on a serverless target.
+
+## Docker
+
+Two images, both built from the **repository root** and both running on Bun —
+there is no Node in either one.
+
+```bash
+docker build -f apps/server/Dockerfile -t game-server .
+docker build -f apps/web/Dockerfile -t game-web \
+  --build-arg NEXT_PUBLIC_SERVER_URL=https://api.example.com \
+  --build-arg NEXT_PUBLIC_WS_URL=wss://api.example.com/ws .
+```
+
+| Image | Size | Runtime |
+| --- | --- | --- |
+| `server` | ~88 MB | `oven/bun:alpine` plus a single 1.3 MB bundle |
+| `web` | ~146 MB | `oven/bun:alpine` plus Next's standalone output |
+
+The server is bundled with `bun build` rather than shipped as a workspace,
+because a workspace install drags in Next, React, Biome and Vitest — 1.5 GB of
+things the server never loads. Both images share the same base layer, so a host
+running both pulls that ~100 MB once.
+
+**`NEXT_PUBLIC_*` are build arguments, not runtime environment.** Next compiles
+them into the client bundle, so an image built with the defaults points every
+player's browser at their own machine. Pass the real URLs at build time.
+
+Both images run as a non-root user and carry a `HEALTHCHECK`.
+
+### CI
+
+`.github/workflows/docker.yml` runs `bun run check`, `bun run typecheck` and
+`bun test`, then builds both images and pushes them to GHCR at
+`ghcr.io/<owner>/<repo>/web` and `.../server`. Publishing uses the built-in
+`GITHUB_TOKEN`, so there is no secret to configure — but set the repository
+variables `NEXT_PUBLIC_SERVER_URL` and `NEXT_PUBLIC_WS_URL`, or the published
+web image will only work against localhost.
+
+Pull requests build both images to prove the Dockerfiles still work, and
+publish nothing. Pushes to `main` and `v*` tags publish, and each published
+image is then pulled back and started to confirm it answers.
+
+Builds target `linux/amd64`. Run the workflow manually to add `linux/arm64` —
+it goes through QEMU and is considerably slower.

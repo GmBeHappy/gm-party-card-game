@@ -1,0 +1,146 @@
+name: build and publish images
+
+# Images go to GHCR under the repository's own namespace, so publishing needs
+# no secret beyond the token GitHub already hands every workflow.
+#
+#   ghcr.io/<owner>/<repo>/web
+#   ghcr.io/<owner>/<repo>/server
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      platforms:
+        description: Target platforms to build
+        required: false
+        default: linux/amd64
+        type: choice
+        options:
+          - linux/amd64
+          - linux/amd64,linux/arm64
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  REGISTRY: ghcr.io
+
+jobs:
+  # Nothing gets published that has not passed the same checks a developer runs.
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.0
+
+      - run: bun install --frozen-lockfile
+
+      - name: Lint and format
+        run: bun run check
+
+      - name: Typecheck
+        run: bun run typecheck
+
+      - name: Test
+        run: bun test
+
+  build:
+    needs: verify
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - app: web
+            dockerfile: apps/web/Dockerfile
+          - app: server
+            dockerfile: apps/server/Dockerfile
+
+    steps:
+      - uses: actions/checkout@v5
+
+      # Only needed for cross-architecture builds; harmless otherwise.
+      - uses: docker/setup-qemu-action@v3
+        if: contains(inputs.platforms, 'arm64')
+
+      - uses: docker/setup-buildx-action@v3
+
+      # A pull request builds to prove the Dockerfile still works, but must not
+      # publish — it may come from a fork.
+      - name: Log in to GHCR
+        if: github.event_name != 'pull_request'
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Derive tags and labels
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ github.repository }}/${{ matrix.app }}
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=sha,format=long
+            type=raw,value=latest,enable={{is_default_branch}}
+
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ${{ matrix.dockerfile }}
+          platforms: ${{ inputs.platforms || 'linux/amd64' }}
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          # NEXT_PUBLIC_* is compiled into the client bundle, so the deployed
+          # URLs have to be known here, at build time. Set these as repository
+          # variables; without them the image only works against localhost.
+          build-args: |
+            NEXT_PUBLIC_SERVER_URL=${{ vars.NEXT_PUBLIC_SERVER_URL || 'http://localhost:3001' }}
+            NEXT_PUBLIC_WS_URL=${{ vars.NEXT_PUBLIC_WS_URL || 'ws://localhost:3001/ws' }}
+          cache-from: type=gha,scope=${{ matrix.app }}
+          cache-to: type=gha,scope=${{ matrix.app }},mode=max
+
+      # A published image that has never been started is a guess. Pull the
+      # amd64 tag back and check the process actually answers.
+      - name: Smoke-test the published image
+        if: github.event_name != 'pull_request'
+        env:
+          IMAGE: ${{ env.REGISTRY }}/${{ github.repository }}/${{ matrix.app }}:sha-${{ github.sha }}
+        run: |
+          set -euo pipefail
+          if [ "${{ matrix.app }}" = "server" ]; then
+            PORT=3001; PATH_TO_CHECK=/health
+          else
+            PORT=3000; PATH_TO_CHECK=/
+          fi
+          docker run -d --name probe -p "$PORT:$PORT" \
+            -e SESSION_SECRET=ci-smoke-test "$IMAGE"
+          for i in $(seq 1 30); do
+            if curl -fsS "http://localhost:$PORT$PATH_TO_CHECK" >/dev/null; then
+              echo "$IMAGE answered on $PATH_TO_CHECK"
+              docker rm -f probe >/dev/null
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "::error::$IMAGE never answered on $PATH_TO_CHECK"
+          docker logs probe
+          docker rm -f probe >/dev/null
+          exit 1

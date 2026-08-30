@@ -1,0 +1,15 @@
+# Everything the build produces or the host left behind. Keeping these out of
+# the context makes the build both faster and reproducible.
+**/node_modules
+**/.next
+**/dist
+**/out
+**/coverage
+**/*.log
+**/.env
+**/.env.local
+**/.DS_Store
+.git
+.github
+docs
+**/tsconfig.tsbuildinfo
