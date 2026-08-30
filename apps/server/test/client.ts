@@ -133,3 +133,22 @@ export async function playOutRound(
     await sleep(30)
   }
 }
+
+/** Play the first legal card the server offered. Hearts plays exactly one. */
+export function heartsTurn(client: TestClient): void {
+  const view = client.view
+  const you = view?.you
+  if (view == null || you == null) return
+  const cardId = you.playable[0]
+  if (cardId === undefined) return
+  client.send({ type: 'play', payload: { cardIds: [cardId] } })
+}
+
+/** Pass the first three cards in hand, if this seat still owes a pass. */
+export function passThree(client: TestClient): void {
+  const table = client.view?.table
+  if (table?.game !== 'hearts' || table.passing?.give == null) return
+  const cardIds = (client.view?.you?.hand ?? []).slice(0, 3).map((card) => card.id)
+  if (cardIds.length < 3) return
+  client.send({ type: 'exchange', payload: { cardIds } })
+}

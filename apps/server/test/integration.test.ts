@@ -2,7 +2,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'bun:test'
 import type { RoomView } from '@cards/shared'
 import { createApp } from '../src/app'
 import { timings } from '../src/config'
-import { playOutRound, TestClient, until } from './client'
+import { heartsTurn, passThree, playOutRound, sleep, TestClient, until } from './client'
 
 /** Narrow a view to one game's settings, or null if it is the other game. */
 function slaveSettings(view: RoomView | null | undefined) {
@@ -407,3 +407,99 @@ describe('a hearts room', () => {
     expect(info.maxPlayers).toBe(4)
   })
 })
+
+describe('a full hearts match over real sockets', () => {
+  async function createHearts(): Promise<string> {
+    const response = await fetch(`${base}/rooms`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ game: 'hearts' }),
+    })
+    const { code } = (await response.json()) as { code: string }
+    return code
+  }
+
+  /** One human among three bots, seated and started. */
+  async function startHearts(name: string, targetScore: 50 | 100 | 200) {
+    const code = await createHearts()
+    const host = new TestClient(wsUrl, name)
+    await host.connect(code)
+    await until(() => host.view !== null, 'joined')
+
+    host.send({ type: 'settings', payload: { targetScore } })
+    await until(() => heartsSettings(host.view)?.targetScore === targetScore, 'target set')
+
+    for (let i = 0; i < 3; i++) host.send({ type: 'addBot' })
+    await until(() => host.view?.seats.length === 4, 'table full')
+
+    host.send({ type: 'ready', payload: { ready: true } })
+    await until(() => host.seat?.ready === true, 'ready')
+    host.send({ type: 'start' })
+    await until(() => host.view?.phase !== 'lobby', 'match started', 15_000)
+    return host
+  }
+
+  it('plays from the lobby to a finished match, and the lowest score wins', async () => {
+    const host = await startHearts('Watcher', 50)
+
+    for (let step = 0; step < 3_000; step++) {
+      const view = host.view
+      if (view?.phase === 'matchEnd') break
+      if (view?.phase === 'roundEnd' && view.you?.isHost === true) {
+        host.send({ type: 'nextRound' })
+      } else if (view?.phase === 'exchange') {
+        passThree(host)
+      } else if (view?.phase === 'playing' && host.myTurn) {
+        heartsTurn(host)
+      }
+      await sleep(15)
+    }
+
+    expect(host.view?.phase).toBe('matchEnd')
+    const scores = (host.view?.standings ?? []).map((row) => row.score)
+    expect(scores).toHaveLength(4)
+    // Someone reached the target, and the leader is the lowest of the four.
+    expect(Math.max(...scores)).toBeGreaterThanOrEqual(50)
+    expect(host.view?.standings[0]?.score).toBe(Math.min(...scores))
+    host.disconnect()
+  }, 120_000)
+
+  it('never puts another hand on the wire', async () => {
+    const host = await startHearts('Alice', 100)
+    await until(() => host.view?.phase === 'exchange', 'dealt')
+
+    const mine = new Set((host.view?.you?.hand ?? []).map((card) => card.id))
+    expect(mine.size).toBe(13)
+    expect(host.view?.seats.every((seat) => seat.handCount === 13)).toBe(true)
+
+    // The wire carries the viewer's own thirteen cards and nobody else's.
+    const onTheWire = [...JSON.stringify(host.view).matchAll(/"id":"(\d+[CDHS])"/g)].map(
+      (match) => match[1] ?? '',
+    )
+    expect(onTheWire.length).toBeGreaterThan(0)
+    expect(onTheWire.filter((id) => !mine.has(id))).toEqual([])
+    host.disconnect()
+  }, 60_000)
+
+  it('resolves the pass on the deadline when a seat never chooses', async () => {
+    const host = await startHearts('Idle', 100)
+    await until(() => host.view?.phase === 'exchange', 'passing')
+
+    // Say nothing. The three bots pass at once; a disconnected human is
+    // covered by the short fuse rather than the full 30s pass clock.
+    const token = host.token
+    host.disconnect()
+    await sleep(timings.disconnectedTurnMs + 500)
+
+    const back = new TestClient(wsUrl, 'Idle')
+    await back.connect(code(host), token)
+    await until(() => back.view?.phase === 'playing', 'pass resolved', 45_000)
+    expect(back.view?.you?.hand).toHaveLength(13)
+    back.disconnect()
+  }, 90_000)
+})
+
+/** The room code a client is sitting in. */
+function code(client: TestClient): string {
+  return client.view?.code ?? ''
+}
