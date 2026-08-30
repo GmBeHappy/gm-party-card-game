@@ -86,11 +86,22 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      # A repository owner may have capitals in their name; an image reference
+      # may not. Computing it once here means the tag that gets pushed and the
+      # reference that gets tested can never disagree.
+      - name: Derive the image name
+        id: image
+        env:
+          REPOSITORY: ${{ github.repository }}
+        run: |
+          lower=$(printf '%s' "$REPOSITORY" | tr '[:upper:]' '[:lower:]')
+          echo "name=${REGISTRY}/${lower}/${{ matrix.app }}" >> "$GITHUB_OUTPUT"
+
       - name: Derive tags and labels
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ${{ env.REGISTRY }}/${{ github.repository }}/${{ matrix.app }}
+          images: ${{ steps.image.outputs.name }}
           tags: |
             type=ref,event=branch
             type=ref,event=pr
@@ -100,6 +111,7 @@ jobs:
             type=raw,value=latest,enable={{is_default_branch}}
 
       - name: Build and push
+        id: build
         uses: docker/build-push-action@v6
         with:
           context: .
@@ -117,12 +129,13 @@ jobs:
           cache-from: type=gha,scope=${{ matrix.app }}
           cache-to: type=gha,scope=${{ matrix.app }},mode=max
 
-      # A published image that has never been started is a guess. Pull the
-      # amd64 tag back and check the process actually answers.
+      # A published image that has never been started is a guess. Pull it back
+      # by digest — the exact artifact that was pushed, not a reconstruction of
+      # what its tag ought to be — and check the process actually answers.
       - name: Smoke-test the published image
         if: github.event_name != 'pull_request'
         env:
-          IMAGE: ${{ env.REGISTRY }}/${{ github.repository }}/${{ matrix.app }}:sha-${{ github.sha }}
+          IMAGE: ${{ steps.image.outputs.name }}@${{ steps.build.outputs.digest }}
         run: |
           set -euo pipefail
           if [ "${{ matrix.app }}" = "server" ]; then
