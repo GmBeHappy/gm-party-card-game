@@ -1,29 +1,31 @@
-# สลาฟ (Slave)
+# เล่นไพ่
 
-A multiplayer **Daifugō** (สลาฟ / President) card game, with a Thai interface. Create a room, share
-the six-character code, and play 3–6 handed in the browser. Disconnecting never
-costs you your seat: while a match is running you can close the tab, come back,
-and your hand is still there.
+Two multiplayer card games in one room: **สลาฟ** (Daifugō / President) and
+**โพแดง** (Hearts), with a Thai interface. Pick a game, share the six-character
+code, and play in the browser. Disconnecting never costs you your seat: while a
+match is running you can close the tab, come back, and your hand is still there.
 
 ```bash
 bun install
 bun dev          # web on :3000, game server on :3001
 ```
 
-Open <http://localhost:3000>, create a room, and either share the invite link or
-fill the empty seats with bots.
+Open <http://localhost:3000>, choose a game, create a room, and either share the
+invite link or fill the empty seats with bots.
 
 ## Layout
 
 | Package | What it is |
 | --- | --- |
-| `packages/game` | The rules engine. Pure functions, no I/O, 99 unit tests. |
+| `packages/game` | Two rules engines behind one `GameModule` interface, over the plain deck they share. Pure functions, no I/O, 174 unit tests. |
 | `packages/shared` | The wire contract: Zod message schemas, error codes, and the redaction that turns authoritative state into one player's view. |
 | `apps/server` | Elysia on Bun. HTTP for room lifecycle, WebSocket for play. |
 | `apps/web` | Next.js 16 App Router, Tailwind v4, shadcn/ui on Radix, Motion. |
 
-The rules engine knows nothing about sockets and the socket layer knows nothing
-about React, which is why the whole game can be tested without a browser.
+The rules engines know nothing about sockets, the socket layer knows nothing
+about React, and neither knows which game is being played — the room resolves
+that through a registry. Which is why the whole thing can be tested without a
+browser, and why adding a third game touches no networking code.
 
 ## Commands
 
@@ -35,13 +37,17 @@ bun run check    # Biome lint + format
 bun run typecheck
 ```
 
-`bun test` runs 99 engine tests plus 11 integration tests that drive real
-WebSocket clients through a full round, a mid-game disconnect and reconnect, a
-forged-token attempt, and a bot-only game.
+`bun test` runs 174 engine tests plus 23 integration tests that drive real
+WebSocket clients through a full round of each game, a mid-game disconnect and
+reconnect, a forged-token attempt, a stalled Hearts pass, and a bot-only match.
 
 ## Rules
 
-Standard Daifugō on a plain **52-card deck — no jokers**.
+Both games use a plain **52-card deck — no jokers**.
+
+### สลาฟ (Daifugō)
+
+3–6 players.
 
 - Ranks run `3 < 4 < … < K < A < 2`.
 - A play is **1–4 cards of one rank**: single, pair, triple, or quad. You must
@@ -62,7 +68,27 @@ Citizens exchange nothing. If the President stalls, their two weakest cards go
 automatically after 30 seconds, so a match can never deadlock behind one idle
 player.
 
+### โพแดง (Hearts)
+
+Four players, thirteen cards each. Points are bad and the lowest score wins.
+
+- Before each round you pass **three cards** face down — left in round one, right
+  in round two, across in round three, and nothing in round four. Then it repeats.
+- The holder of **♣2 leads** the first trick and must lead that card.
+- **Follow the led suit** if you can. The highest card of that suit takes the
+  trick and leads the next one.
+- You cannot **lead a heart** until one has been discarded on another suit. The
+  ♠Q does not break hearts.
+- The **first trick takes no points** — no heart, no ♠Q — unless your hand holds
+  nothing else.
+- Each heart is **1 point**, the **♠Q is 13**. Twenty-six a round.
+- Take **all twenty-six** and you shoot the moon: you score nothing and the other
+  three take 26 each.
+- The match ends the moment anyone reaches the target score.
+
 ### Room settings
+
+#### สลาฟ
 
 | Setting | Default | Effect |
 | --- | --- | --- |
@@ -71,10 +97,25 @@ player.
 | Turn timer | 30s | 15 / 30 / 60 / off. On expiry you auto-pass, or shed your lowest card if you were leading. |
 | Rounds | 5 | 3 / 5 / 10, or endless until the host ends it. |
 
+#### โพแดง
+
+| Setting | Default | Effect |
+| --- | --- | --- |
+| Turn timer | 30s | 15 / 30 / 60 / off. On expiry you play your lowest legal card, or pass your three highest if the round's pass is still open. |
+| Target score | 100 | 50 / 100 / 200. The match ends the moment anyone reaches it. |
+
+The rest of the Hearts rules are fixed. No ♦J, no ♠Q-breaks-hearts, no taking
+−26 for the moon — those variants make the game less legible, not more
+interesting.
+
 ## How the multiplayer works
 
 - **Server-authoritative.** Clients send intents; the server runs them through
   the rules engine and pushes back a fresh snapshot. Nothing is optimistic.
+- **One room layer, two games.** The room resolves rules through a `GameModule`
+  looked up from the state's own `game` tag. Reconnect, seat tokens, host
+  migration, the turn clock and the bots are the same code in both games, which
+  is why fixing one fixes both.
 - **Redacted snapshots.** Every player receives their own view, in which other
   hands are card *counts*. Other players' cards never travel over the wire, so
   there is nothing to read in devtools.
@@ -115,6 +156,17 @@ frame, a dotted field, and a crown medallion, because the rank ladder from
 The deck is four-coloured — grape spades, cherry hearts, tangerine diamonds,
 leaf clubs. That is not decoration: you scan an 18-card fan for a matching suit
 many times a round, and two colours make that slower.
+
+Hearts lays its trick out in a circle rather than a pile: four cards, each
+sitting under the player who played it, the card currently taking the trick
+ringed in lemon, and the trick's running point value at the centre. A pile would
+throw away the two things a Hearts player reads every few seconds — who is
+winning this, and is it worth taking.
+
+The four colours matter more there than in สลาฟ. Daifugō asks you to compare
+ranks; Hearts asks whether you are void in a suit, twelve times a round, under a
+clock. Grouping the hand club-diamond-spade-heart and colouring all four suits
+turns that question into a glance.
 
 ## Sound
 
