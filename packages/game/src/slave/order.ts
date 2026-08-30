@@ -1,8 +1,17 @@
-import { type Card, SUITS } from '../core/card'
+import { type Card, type CardRank, SUITS } from '../core/card'
+
+/**
+ * Daifugō's ladder: 3 < 4 < … < K < A < 2. The deck is ordered 2 low, so the
+ * 2 is lifted above the ace here and nowhere else.
+ */
+export function daifugoOrder(rank: CardRank): number {
+  return rank === 2 ? 15 : rank
+}
 
 /** Effective strength under the current revolution state. */
 export function strength(card: Card, revolution: boolean): number {
-  return revolution ? -card.rank : card.rank
+  const order = daifugoOrder(card.rank)
+  return revolution ? -order : order
 }
 
 /** Sort by play strength, then by suit, so hands render in a stable order. */

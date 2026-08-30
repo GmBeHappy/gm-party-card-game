@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { createDeck, deal, shuffle } from '../src/core/card'
+import { cardLabel, createDeck, deal, RANKS, rankLabel, shuffle } from '../src/core/card'
 import { createRng } from '../src/core/rng'
 import { sortHand, strength } from '../src/slave/order'
 import { c, ids } from './helpers'
@@ -14,7 +14,7 @@ describe('deck', () => {
   it('contains four of every rank across thirteen ranks', () => {
     const deck = createDeck()
     expect(new Set(deck.map((card) => card.rank)).size).toBe(13)
-    for (const rank of [3, 8, 14, 15]) {
+    for (const rank of [2, 3, 8, 14]) {
       expect(deck.filter((card) => card.rank === rank)).toHaveLength(4)
     }
   })
@@ -32,7 +32,7 @@ describe('shuffle', () => {
     const shuffled = shuffle(deck, createRng(1))
     expect(shuffled).toHaveLength(52)
     expect(new Set(shuffled.map((card) => card.id))).toEqual(new Set(deck.map((card) => card.id)))
-    expect(deck[0]?.id).toBe('3C')
+    expect(deck[0]?.id).toBe('2C')
   })
 
   it('is deterministic for a given seed', () => {
@@ -69,23 +69,38 @@ describe('strength', () => {
   it('ranks 3 lowest and the 2 highest', () => {
     expect(strength(c('3C'), false)).toBeLessThan(strength(c('4C'), false))
     expect(strength(c('13C'), false)).toBeLessThan(strength(c('14C'), false))
-    expect(strength(c('14C'), false)).toBeLessThan(strength(c('15C'), false))
+    expect(strength(c('14C'), false)).toBeLessThan(strength(c('2C'), false))
   })
 
   it('inverts the order under revolution', () => {
-    expect(strength(c('3C'), true)).toBeGreaterThan(strength(c('15C'), true))
-    expect(strength(c('15C'), true)).toBeLessThan(strength(c('14C'), true))
+    expect(strength(c('3C'), true)).toBeGreaterThan(strength(c('2C'), true))
+    expect(strength(c('2C'), true)).toBeLessThan(strength(c('14C'), true))
   })
 })
 
 describe('sortHand', () => {
   it('orders weakest first and is stable across suits', () => {
-    const sorted = sortHand([c('15S'), c('3D'), c('3C'), c('11H')])
-    expect(ids(sorted)).toEqual(['3C', '3D', '11H', '15S'])
+    const sorted = sortHand([c('2S'), c('3D'), c('3C'), c('11H')])
+    expect(ids(sorted)).toEqual(['3C', '3D', '11H', '2S'])
   })
 
   it('reverses the order under revolution', () => {
-    const sorted = sortHand([c('3C'), c('15S'), c('9D')], true)
-    expect(ids(sorted)).toEqual(['15S', '9D', '3C'])
+    const sorted = sortHand([c('3C'), c('2S'), c('9D')], true)
+    expect(ids(sorted)).toEqual(['2S', '9D', '3C'])
+  })
+})
+
+describe('standard ranks', () => {
+  it('runs 2 to 14 with the ace high', () => {
+    expect(RANKS[0]).toBe(2)
+    expect(RANKS.at(-1)).toBe(14)
+    expect(RANKS).toHaveLength(13)
+  })
+
+  it('ids a card as rank plus suit', () => {
+    expect(c('2C').rank).toBe(2)
+    expect(c('14S').rank).toBe(14)
+    expect(cardLabel(c('14S'))).toBe('AS')
+    expect(rankLabel(2)).toBe('2')
   })
 })

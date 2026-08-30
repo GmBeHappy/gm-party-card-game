@@ -8,7 +8,7 @@ import type { GameState, Play } from './types'
 function isPremium(play: Play, revolution: boolean): boolean {
   const card = play.cards[0]
   if (card === undefined) return false
-  return revolution ? card.rank === 3 : card.rank === 15
+  return revolution ? card.rank === 3 : card.rank === 2
 }
 
 /** Cheapest first; among equals, shed more cards. */

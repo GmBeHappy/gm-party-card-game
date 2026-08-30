@@ -6,13 +6,14 @@ export type Suit = 'C' | 'D' | 'H' | 'S'
 export const SUITS: readonly Suit[] = ['C', 'D', 'H', 'S'] as const
 
 /**
- * Numeric card ranks. 3 is the weakest card and 15 is the `2`, the strongest.
- * Using numbers keeps comparison arithmetic trivial. This deck has no Jokers.
+ * Numeric card ranks, 2 low through 14 (the ace) high — the order a plain deck
+ * has. A game that wants a different ladder supplies its own, the way
+ * `slave/order.ts` lifts the 2 above the ace for Daifugō. No Jokers.
  */
-export type CardRank = 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15
+export type CardRank = 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14
 
-/** Every rank in the deck, weakest first. */
-export const RANKS: readonly CardRank[] = [3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15] as const
+/** Every rank in the deck, lowest first. */
+export const RANKS: readonly CardRank[] = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14] as const
 
 export interface Card {
   /** Stable identity, unique within a deck: `3S`, `10H`. */
@@ -26,7 +27,6 @@ const RANK_LABELS: Readonly<Record<number, string>> = {
   12: 'Q',
   13: 'K',
   14: 'A',
-  15: '2',
 }
 
 export function rankLabel(rank: CardRank): string {

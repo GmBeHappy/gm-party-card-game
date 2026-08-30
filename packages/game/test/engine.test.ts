@@ -178,7 +178,7 @@ describe('eight cut', () => {
   it('ends the trick immediately and hands the lead back to the cutter', () => {
     const state = playingState({
       p1: cards('8C', '9H'),
-      p2: cards('15C', '10H'),
+      p2: cards('2C', '10H'),
       p3: cards('6C', '11H'),
     })
     const result = reduce(state, { type: 'play', playerId: 'p1', cardIds: ['8C'] }, ctx())
@@ -201,7 +201,7 @@ describe('eight cut', () => {
 
   it('does not cut when the room has the rule switched off', () => {
     const state = playingState(
-      { p1: cards('8C', '9H'), p2: cards('15C', '10H'), p3: cards('6C', '11H') },
+      { p1: cards('8C', '9H'), p2: cards('2C', '10H'), p3: cards('6C', '11H') },
       {},
       { ...DEFAULT_SETTINGS, eightCut: false },
     )
@@ -252,7 +252,7 @@ describe('revolution', () => {
   it('changes which cards are legal to play', () => {
     const state = playingState(
       {
-        p1: cards('9H', '15C'),
+        p1: cards('9H', '2C'),
         p2: cards('4C', '14C'),
         p3: cards('7C', '11H'),
       },
@@ -418,7 +418,7 @@ describe('turn timeouts', () => {
 
   it('sheds the lowest card for a player who has to lead', () => {
     const state = playingState({
-      p1: cards('9H', '4C', '15D'),
+      p1: cards('9H', '4C', '2D'),
       p2: cards('5C', '10H'),
       p3: cards('6C', '11H'),
     })
@@ -477,11 +477,11 @@ describe('client-facing queries', () => {
 
   it('marks nothing playable when the hand cannot answer', () => {
     let state = playingState({
-      p1: cards('15C', '9H'),
+      p1: cards('2C', '9H'),
       p2: cards('5C', '10H'),
       p3: cards('6C', '11H'),
     })
-    state = unwrap(reduce(state, { type: 'play', playerId: 'p1', cardIds: ['15C'] }, ctx()))
+    state = unwrap(reduce(state, { type: 'play', playerId: 'p1', cardIds: ['2C'] }, ctx()))
     expect(playableCardIds(state, 'p2')).toEqual(new Set())
     expect(canPass(state, 'p2')).toBe(true)
   })

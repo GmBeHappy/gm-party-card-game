@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { daifugoOrder } from '../src/slave/order'
 import {
   canBeat,
   classifyPlay,
@@ -52,8 +53,8 @@ describe('canBeat — normal order', () => {
   })
 
   it('requires a matching shape', () => {
-    expect(canBeat(play('15C'), play('3C', '3D'), false)).toBe(false)
-    expect(canBeat(play('15C', '15D'), play('3C'), false)).toBe(false)
+    expect(canBeat(play('2C'), play('3C', '3D'), false)).toBe(false)
+    expect(canBeat(play('2C', '2D'), play('3C'), false)).toBe(false)
   })
 
   it('requires a strictly higher rank', () => {
@@ -63,8 +64,8 @@ describe('canBeat — normal order', () => {
   })
 
   it('ranks the 2 above the ace', () => {
-    expect(canBeat(play('15C'), play('14C'), false)).toBe(true)
-    expect(canBeat(play('14C'), play('15C'), false)).toBe(false)
+    expect(canBeat(play('2C'), play('14C'), false)).toBe(true)
+    expect(canBeat(play('14C'), play('2C'), false)).toBe(false)
   })
 
   it('compares pairs by rank, ignoring suit', () => {
@@ -75,13 +76,13 @@ describe('canBeat — normal order', () => {
 
 describe('canBeat — revolution', () => {
   it('inverts natural ranks', () => {
-    expect(canBeat(play('3C'), play('15D'), true)).toBe(true)
-    expect(canBeat(play('15C'), play('3D'), true)).toBe(false)
+    expect(canBeat(play('3C'), play('2D'), true)).toBe(true)
+    expect(canBeat(play('2C'), play('3D'), true)).toBe(false)
   })
 
   it('makes the 3 the strongest card and the 2 the weakest', () => {
     expect(canBeat(play('3C'), play('4D'), true)).toBe(true)
-    expect(canBeat(play('15C'), play('14D'), true)).toBe(false)
+    expect(canBeat(play('2C'), play('14D'), true)).toBe(false)
   })
 
   it('inverts pairs as well as singles', () => {
@@ -121,20 +122,32 @@ describe('legalPlays', () => {
   })
 
   it('offers only matching, higher shapes when following', () => {
-    const hand = cards('3C', '3D', '5H', '5S', '15C')
+    const hand = cards('3C', '3D', '5H', '5S', '2C')
     const options = legalPlays(hand, play('4C', '4D'), false)
     expect(options.map((p) => p.rank)).toEqual([5])
   })
 
   it('reports when a hand is stuck', () => {
     const hand = cards('3C', '3D')
-    expect(hasLegalPlay(hand, play('15C'), false)).toBe(false)
-    expect(hasLegalPlay(hand, play('15C', '15D'), false)).toBe(false)
+    expect(hasLegalPlay(hand, play('2C'), false)).toBe(false)
+    expect(hasLegalPlay(hand, play('2C', '2D'), false)).toBe(false)
   })
 
   it('inverts which plays are offered under revolution', () => {
     const hand = cards('4C', '14C')
     expect(legalPlays(hand, play('9H'), false).map((p) => p.rank)).toEqual([14])
     expect(legalPlays(hand, play('9H'), true).map((p) => p.rank)).toEqual([4])
+  })
+})
+
+describe('daifugo order', () => {
+  it('puts the 2 above the ace and the 3 at the bottom', () => {
+    expect(daifugoOrder(2)).toBeGreaterThan(daifugoOrder(14))
+    expect(daifugoOrder(3)).toBeLessThan(daifugoOrder(4))
+  })
+
+  it('still lets a 2 beat an ace', () => {
+    expect(canBeat(play('2C'), play('14C'), false)).toBe(true)
+    expect(canBeat(play('14C'), play('2C'), false)).toBe(false)
   })
 })

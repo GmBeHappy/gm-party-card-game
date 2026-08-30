@@ -3,7 +3,7 @@ import type { Phase, RoundResult } from '../core/phase'
 import type { Player, PlayerId } from '../core/player'
 
 /** Daifugō's own rank constants. The deck itself has no opinion about these. */
-export const TWO_RANK = 15 as const
+export const TWO_RANK = 2 as const
 export const EIGHT_RANK = 8 as const
 export const THREE_RANK = 3 as const
 

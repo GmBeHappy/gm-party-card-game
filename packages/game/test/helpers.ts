@@ -7,7 +7,7 @@ import { DEFAULT_SETTINGS, type GameState, type RoomSettings } from '../src/slav
 
 const DECK = createDeck()
 
-/** Look a card up by id: `c('3S')`, `c('10H')`, `c('15D')` (the 2 of diamonds). */
+/** Look a card up by id: `c('3S')`, `c('10H')`, `c('2D')`. */
 export function c(id: string): Card {
   const card = DECK.find((card) => card.id === id)
   if (card === undefined) throw new Error(`no such card: ${id}`)
