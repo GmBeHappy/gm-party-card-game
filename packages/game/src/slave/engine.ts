@@ -1,79 +1,32 @@
 import type { Card } from '../core/card'
 import { createDeck, deal, shuffle } from '../core/card'
+import type { Action, ActionError, ActionResult, EngineContext, GameEvent } from '../core/module'
 import type { Player, PlayerId } from '../core/player'
-import type { Rng } from '../core/rng'
+import { addScores } from '../core/scoring'
 import { applyTransfer, buildTransfers, pendingTransfers, weakestCards } from './exchange'
 import { sortHand } from './order'
 import { canBeat, classifyPlay, isEightCut, isRevolutionPlay, legalPlays } from './plays'
 import { assignRoles, findByRole } from './roles'
-import { addScores, roundPoints } from './scoring'
+import { roundPoints } from './scoring'
 import {
-  DEFAULT_SETTINGS,
+  DEFAULT_SLAVE_SETTINGS,
   type ExchangeTransfer,
-  type GameState,
-  type Play,
-  type RoomSettings,
+  type SlaveSettings,
+  type SlaveState,
 } from './types'
 
 export const EXCHANGE_SECONDS = 30
 export const MIN_PLAYERS = 3
 export const MAX_PLAYERS = 6
 
-export interface EngineContext {
-  readonly now: number
-  readonly rng: Rng
-}
-
-export type Action =
-  | { readonly type: 'startMatch' }
-  | { readonly type: 'play'; readonly playerId: PlayerId; readonly cardIds: readonly string[] }
-  | { readonly type: 'pass'; readonly playerId: PlayerId }
-  | {
-      readonly type: 'exchangeChoose'
-      readonly playerId: PlayerId
-      readonly cardIds: readonly string[]
-    }
-  | { readonly type: 'timeout' }
-  | { readonly type: 'nextRound' }
-  | { readonly type: 'endMatch' }
-
-export type ActionError =
-  | 'wrong-phase'
-  | 'not-your-turn'
-  | 'unknown-player'
-  | 'card-not-in-hand'
-  | 'invalid-play'
-  | 'cannot-beat'
-  | 'cannot-pass'
-  | 'no-pending-exchange'
-  | 'wrong-card-count'
-  | 'not-enough-players'
-
-export type GameEvent =
-  | { readonly type: 'dealt'; readonly round: number }
-  | { readonly type: 'exchangeStarted' }
-  | { readonly type: 'exchangeResolved' }
-  | { readonly type: 'played'; readonly playerId: PlayerId; readonly play: Play }
-  | { readonly type: 'passed'; readonly playerId: PlayerId }
-  | { readonly type: 'eightCut'; readonly playerId: PlayerId }
-  | { readonly type: 'revolution'; readonly playerId: PlayerId; readonly active: boolean }
-  | { readonly type: 'trickCleared'; readonly leader: PlayerId | null }
-  | { readonly type: 'playerFinished'; readonly playerId: PlayerId; readonly place: number }
-  | { readonly type: 'roundEnded'; readonly round: number }
-  | { readonly type: 'matchEnded' }
-  | { readonly type: 'turnChanged'; readonly playerId: PlayerId | null }
-
-export type ActionResult =
-  | { readonly ok: true; readonly state: GameState; readonly events: readonly GameEvent[] }
-  | { readonly ok: false; readonly error: ActionError }
-
-const fail = (error: ActionError): ActionResult => ({ ok: false, error })
+const fail = (error: ActionError): ActionResult<SlaveState> => ({ ok: false, error })
 
 export function createInitialState(
   players: readonly Player[],
-  settings: RoomSettings = DEFAULT_SETTINGS,
-): GameState {
+  settings: SlaveSettings = DEFAULT_SLAVE_SETTINGS,
+): SlaveState {
   return {
+    game: 'slave',
     phase: 'lobby',
     settings,
     players: [...players],
@@ -88,6 +41,7 @@ export function createInitialState(
     exchange: null,
     history: [],
     turnDeadline: null,
+    phaseDeadline: null,
     version: 0,
   }
 }
@@ -97,14 +51,18 @@ export function createInitialState(
  * shuffling seats) and for seating people who joined while a match was running.
  * Only safe between rounds, which the caller enforces.
  */
-export function seatPlayers(state: GameState, players: readonly Player[]): GameState {
+export function seatPlayers(state: SlaveState, players: readonly Player[]): SlaveState {
   const scores: Record<PlayerId, number> = {}
   for (const player of players) scores[player.id] = state.scores[player.id] ?? 0
   return { ...state, players: [...players], scores, version: state.version + 1 }
 }
 
 /** Mark a seat connected or not without touching anything else. */
-export function setConnected(state: GameState, playerId: PlayerId, connected: boolean): GameState {
+export function setConnected(
+  state: SlaveState,
+  playerId: PlayerId,
+  connected: boolean,
+): SlaveState {
   return {
     ...state,
     players: state.players.map((player) =>
@@ -116,12 +74,12 @@ export function setConnected(state: GameState, playerId: PlayerId, connected: bo
 
 // ---------------------------------------------------------------- turn order
 
-function seatIds(state: GameState): PlayerId[] {
+function seatIds(state: SlaveState): PlayerId[] {
   return state.players.map((p) => p.id)
 }
 
 /** Players who still hold cards this round. */
-function activeIds(state: GameState): PlayerId[] {
+function activeIds(state: SlaveState): PlayerId[] {
   return seatIds(state).filter((id) => (state.hands[id] ?? []).length > 0)
 }
 
@@ -129,7 +87,7 @@ function activeIds(state: GameState): PlayerId[] {
  * Walk seat order forward from `fromId` to the next player who still has cards
  * and has not passed out of the current trick.
  */
-function nextTurn(state: GameState, fromId: PlayerId | null): PlayerId | null {
+function nextTurn(state: SlaveState, fromId: PlayerId | null): PlayerId | null {
   const seats = seatIds(state)
   if (seats.length === 0) return null
   const start = fromId === null ? -1 : seats.indexOf(fromId)
@@ -143,7 +101,7 @@ function nextTurn(state: GameState, fromId: PlayerId | null): PlayerId | null {
 }
 
 /** Next player with cards, ignoring who has passed — used when a trick clears. */
-function nextWithCards(state: GameState, fromId: PlayerId | null): PlayerId | null {
+function nextWithCards(state: SlaveState, fromId: PlayerId | null): PlayerId | null {
   const seats = seatIds(state)
   const start = fromId === null ? -1 : seats.indexOf(fromId)
   for (let step = 0; step <= seats.length; step++) {
@@ -156,13 +114,17 @@ function nextWithCards(state: GameState, fromId: PlayerId | null): PlayerId | nu
   return null
 }
 
-function deadlineFor(state: GameState, now: number): number | null {
+function deadlineFor(state: SlaveState, now: number): number | null {
   return state.settings.turnSeconds === null ? null : now + state.settings.turnSeconds * 1000
 }
 
 // ------------------------------------------------------------------- rounds
 
-export function startRound(state: GameState, round: number, ctx: EngineContext): ActionResult {
+export function startRound(
+  state: SlaveState,
+  round: number,
+  ctx: EngineContext,
+): ActionResult<SlaveState> {
   const players = state.players
   if (players.length < MIN_PLAYERS) return fail('not-enough-players')
 
@@ -173,7 +135,7 @@ export function startRound(state: GameState, round: number, ctx: EngineContext):
     hands[player.id] = sortHand(dealt[index] ?? [])
   })
 
-  const base: GameState = {
+  const base: SlaveState = {
     ...state,
     round,
     hands,
@@ -183,6 +145,7 @@ export function startRound(state: GameState, round: number, ctx: EngineContext):
     exchange: null,
     currentPlayer: null,
     turnDeadline: null,
+    phaseDeadline: null,
     version: state.version + 1,
   }
 
@@ -191,7 +154,7 @@ export function startRound(state: GameState, round: number, ctx: EngineContext):
   // Round 1 has no roles yet, so nobody exchanges and ♦3 leads.
   if (round === 1 || Object.keys(state.roles).length === 0) {
     const leader = findDiamondThreeHolder(hands, players) ?? players[0]?.id ?? null
-    const playing: GameState = {
+    const playing: SlaveState = {
       ...base,
       phase: 'playing',
       currentPlayer: leader,
@@ -210,7 +173,7 @@ export function startRound(state: GameState, round: number, ctx: EngineContext):
     return transfer
   })
 
-  const withHands: GameState = { ...base, hands: workingHands }
+  const withHands: SlaveState = { ...base, hands: workingHands }
   const pending = pendingTransfers(transfers)
 
   if (pending.length === 0) {
@@ -223,7 +186,8 @@ export function startRound(state: GameState, round: number, ctx: EngineContext):
     state: {
       ...withHands,
       phase: 'exchange',
-      exchange: { transfers, deadline: ctx.now + EXCHANGE_SECONDS * 1000 },
+      exchange: { transfers },
+      phaseDeadline: ctx.now + EXCHANGE_SECONDS * 1000,
     },
     events,
   }
@@ -242,10 +206,10 @@ function findDiamondThreeHolder(
 
 /** Exchange is done — the Slave leads the first trick of the round. */
 function beginPlay(
-  state: GameState,
+  state: SlaveState,
   transfers: readonly ExchangeTransfer[],
   ctx: EngineContext,
-): GameState {
+): SlaveState {
   let hands = state.hands
   for (const transfer of transfers) {
     if (transfer.forced) continue
@@ -259,17 +223,18 @@ function beginPlay(
     exchange: null,
     currentPlayer: leader,
     turnDeadline: deadlineFor(state, ctx.now),
+    phaseDeadline: null,
     version: state.version + 1,
   }
 }
 
-function finishRound(state: GameState, events: GameEvent[]): GameState {
+function finishRound(state: SlaveState, events: GameEvent[]): SlaveState {
   const remaining = activeIds(state)
   const finishOrder = [...state.finishOrder, ...remaining]
   const points = roundPoints(finishOrder)
   const roles = assignRoles(finishOrder)
   const scores = addScores(state.scores, points)
-  const history = [...state.history, { round: state.round, finishOrder, points }]
+  const history = [...state.history, { round: state.round, points }]
   const isLast = state.settings.totalRounds !== null && state.round >= state.settings.totalRounds
 
   events.push({ type: 'roundEnded', round: state.round })
@@ -284,6 +249,7 @@ function finishRound(state: GameState, events: GameEvent[]): GameState {
     history,
     currentPlayer: null,
     turnDeadline: null,
+    phaseDeadline: null,
     version: state.version + 1,
   }
 }
@@ -291,11 +257,11 @@ function finishRound(state: GameState, events: GameEvent[]): GameState {
 // ------------------------------------------------------------------ actions
 
 function doPlay(
-  state: GameState,
+  state: SlaveState,
   playerId: PlayerId,
   cardIds: readonly string[],
   ctx: EngineContext,
-): ActionResult {
+): ActionResult<SlaveState> {
   if (state.phase !== 'playing') return fail('wrong-phase')
   if (state.currentPlayer !== playerId) return fail('not-your-turn')
 
@@ -314,10 +280,10 @@ function doPlay(
     return fail('cannot-beat')
   }
 
-  const events: GameEvent[] = [{ type: 'played', playerId, play }]
+  const events: GameEvent[] = [{ type: 'played', playerId, cardIds: cards.map((card) => card.id) }]
   const remainingHand = hand.filter((card) => !wanted.has(card.id))
 
-  let next: GameState = {
+  let next: SlaveState = {
     ...state,
     hands: { ...state.hands, [playerId]: remainingHand },
     trick: { current: play, leader: playerId, passed: state.trick.passed },
@@ -356,12 +322,12 @@ function doPlay(
 
 /** Reset the trick and hand the lead to `leaderId` (or the next player holding cards). */
 function clearTrick(
-  state: GameState,
+  state: SlaveState,
   leaderId: PlayerId | null,
   ctx: EngineContext,
   events: GameEvent[],
-): GameState {
-  const cleared: GameState = {
+): SlaveState {
+  const cleared: SlaveState = {
     ...state,
     trick: { current: null, leader: null, passed: [] },
   }
@@ -376,7 +342,11 @@ function clearTrick(
   }
 }
 
-function doPass(state: GameState, playerId: PlayerId, ctx: EngineContext): ActionResult {
+function doPass(
+  state: SlaveState,
+  playerId: PlayerId,
+  ctx: EngineContext,
+): ActionResult<SlaveState> {
   if (state.phase !== 'playing') return fail('wrong-phase')
   if (state.currentPlayer !== playerId) return fail('not-your-turn')
   // Leading a fresh trick, you must play something.
@@ -384,7 +354,7 @@ function doPass(state: GameState, playerId: PlayerId, ctx: EngineContext): Actio
 
   const events: GameEvent[] = [{ type: 'passed', playerId }]
   const passed = [...state.trick.passed, playerId]
-  const next: GameState = {
+  const next: SlaveState = {
     ...state,
     trick: { ...state.trick, passed },
     version: state.version + 1,
@@ -410,11 +380,11 @@ function doPass(state: GameState, playerId: PlayerId, ctx: EngineContext): Actio
 }
 
 function doExchangeChoose(
-  state: GameState,
+  state: SlaveState,
   playerId: PlayerId,
   cardIds: readonly string[],
   ctx: EngineContext,
-): ActionResult {
+): ActionResult<SlaveState> {
   if (state.phase !== 'exchange' || state.exchange === null) return fail('wrong-phase')
 
   const transfer = state.exchange.transfers.find((t) => t.from === playerId && t.cards === null)
@@ -434,9 +404,9 @@ function doExchangeChoose(
 }
 
 function settleExchange(
-  state: GameState,
+  state: SlaveState,
   ctx: EngineContext,
-): { state: GameState; events: readonly GameEvent[] } {
+): { state: SlaveState; events: readonly GameEvent[] } {
   const transfers = state.exchange?.transfers ?? []
   if (pendingTransfers(transfers).length > 0) {
     return { state: { ...state, version: state.version + 1 }, events: [] }
@@ -448,7 +418,7 @@ function settleExchange(
   }
 }
 
-function doTimeout(state: GameState, ctx: EngineContext): ActionResult {
+function doTimeout(state: SlaveState, ctx: EngineContext): ActionResult<SlaveState> {
   if (state.phase === 'exchange' && state.exchange !== null) {
     // Stalled President: their weakest cards go automatically, so the match
     // can never deadlock behind one idle player.
@@ -471,7 +441,11 @@ function doTimeout(state: GameState, ctx: EngineContext): ActionResult {
   return doPlay(state, playerId, [lowest.id], ctx)
 }
 
-export function reduce(state: GameState, action: Action, ctx: EngineContext): ActionResult {
+export function reduce(
+  state: SlaveState,
+  action: Action,
+  ctx: EngineContext,
+): ActionResult<SlaveState> {
   switch (action.type) {
     case 'startMatch': {
       if (state.phase !== 'lobby') return fail('wrong-phase')
@@ -503,7 +477,7 @@ export function reduce(state: GameState, action: Action, ctx: EngineContext): Ac
 
 // ------------------------------------------------------------------ queries
 
-export function playableCardIds(state: GameState, playerId: PlayerId): Set<string> {
+export function playableCardIds(state: SlaveState, playerId: PlayerId): Set<string> {
   if (state.phase !== 'playing' || state.currentPlayer !== playerId) return new Set()
   const hand = state.hands[playerId] ?? []
   const plays = legalPlays(hand, state.trick.current, state.revolution)
@@ -514,13 +488,13 @@ export function playableCardIds(state: GameState, playerId: PlayerId): Set<strin
   return ids
 }
 
-export function canPass(state: GameState, playerId: PlayerId): boolean {
+export function canPass(state: SlaveState, playerId: PlayerId): boolean {
   return (
     state.phase === 'playing' && state.currentPlayer === playerId && state.trick.current !== null
   )
 }
 
-export function handCounts(state: GameState): Record<PlayerId, number> {
+export function handCounts(state: SlaveState): Record<PlayerId, number> {
   const counts: Record<PlayerId, number> = {}
   for (const player of state.players) counts[player.id] = (state.hands[player.id] ?? []).length
   return counts

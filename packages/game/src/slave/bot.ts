@@ -1,8 +1,8 @@
+import type { Action } from '../core/module'
 import type { PlayerId } from '../core/player'
-import type { Action } from './engine'
 import { sortHand, strength } from './order'
 import { legalPlays } from './plays'
-import type { GameState, Play } from './types'
+import type { Play, SlaveState } from './types'
 
 /** A 2 (or a 3 under revolution) is worth hoarding rather than spending. */
 function isPremium(play: Play, revolution: boolean): boolean {
@@ -27,7 +27,7 @@ function rank(plays: readonly Play[], revolution: boolean): Play[] {
  * to the top cards while the hand is still long, and always take a chance to
  * go out. Good enough to fill a seat and to drive the integration test.
  */
-export function chooseBotAction(state: GameState, playerId: PlayerId): Action {
+export function chooseBotAction(state: SlaveState, playerId: PlayerId): Action {
   const hand = state.hands[playerId] ?? []
   const options = rank(legalPlays(hand, state.trick.current, state.revolution), state.revolution)
 
@@ -49,7 +49,7 @@ export function chooseBotAction(state: GameState, playerId: PlayerId): Action {
 }
 
 /** A bot president sends back its weakest cards. */
-export function chooseBotExchange(state: GameState, playerId: PlayerId, count: number): Action {
+export function chooseBotExchange(state: SlaveState, playerId: PlayerId, count: number): Action {
   const hand = sortHand(state.hands[playerId] ?? [])
   return {
     type: 'exchangeChoose',

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
+import { addScores, standings } from '../src/core/scoring'
 import { assignRoles, findByRole } from '../src/slave/roles'
-import { addScores, roundPoints, standings } from '../src/slave/scoring'
+import { roundPoints } from '../src/slave/scoring'
 
 describe('assignRoles', () => {
   it('gives three players president, citizen, slave', () => {

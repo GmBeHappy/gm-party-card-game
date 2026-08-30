@@ -1,4 +1,4 @@
-import { DEFAULT_SETTINGS, type GameEvent, MAX_PLAYERS } from '@cards/game'
+import { DEFAULT_SLAVE_SETTINGS, type GameEvent, MAX_PLAYERS } from '@cards/game'
 import { clientMessageSchema, ERROR_MESSAGES, type ErrorCode, roomCodeSchema } from '@cards/shared'
 import { cors } from '@elysiajs/cors'
 import { Elysia } from 'elysia'
@@ -68,7 +68,7 @@ export function createApp() {
 
     .post('/rooms', () => {
       const code = generateRoomCode((candidate) => store.has(candidate))
-      store.create(code, DEFAULT_SETTINGS)
+      store.create(code, DEFAULT_SLAVE_SETTINGS)
       return { code }
     })
 

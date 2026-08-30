@@ -3,23 +3,23 @@ import {
   type ActionResult,
   canPass,
   createInitialState,
-  type GameState,
   handCounts,
   playableCardIds,
   reduce,
+  type SlaveState,
   seatPlayers,
   setConnected,
 } from '../src/index'
 import { sortHand } from '../src/slave/order'
-import { DEFAULT_SETTINGS } from '../src/slave/types'
+import { DEFAULT_SLAVE_SETTINGS } from '../src/slave/types'
 import { cards, ctx, ids, makePlayers, playingState } from './helpers'
 
-function unwrap(result: ActionResult): GameState {
+function unwrap(result: ActionResult<SlaveState>): SlaveState {
   if (!result.ok) throw new Error(`action failed: ${result.error}`)
   return result.state
 }
 
-function events(result: ActionResult): string[] {
+function events(result: ActionResult<SlaveState>): string[] {
   if (!result.ok) throw new Error(`action failed: ${result.error}`)
   return result.events.map((event) => event.type)
 }
@@ -57,7 +57,7 @@ describe('starting a match', () => {
 
   it('leaves the deadline null when the timer is off', () => {
     const untimed = createInitialState(makePlayers(3), {
-      ...DEFAULT_SETTINGS,
+      ...DEFAULT_SLAVE_SETTINGS,
       turnSeconds: null,
     })
     const state = unwrap(reduce(untimed, { type: 'startMatch' }, ctx()))
@@ -203,7 +203,7 @@ describe('eight cut', () => {
     const state = playingState(
       { p1: cards('8C', '9H'), p2: cards('2C', '10H'), p3: cards('6C', '11H') },
       {},
-      { ...DEFAULT_SETTINGS, eightCut: false },
+      { ...DEFAULT_SLAVE_SETTINGS, eightCut: false },
     )
     const next = unwrap(reduce(state, { type: 'play', playerId: 'p1', cardIds: ['8C'] }, ctx()))
     expect(next.trick.current?.rank).toBe(8)
@@ -296,7 +296,7 @@ describe('finishing and round end', () => {
     const single = playingState(
       { p1: cards('4C'), p2: cards('5C'), p3: cards('6C', '7C') },
       {},
-      { ...DEFAULT_SETTINGS, totalRounds: 1 },
+      { ...DEFAULT_SLAVE_SETTINGS, totalRounds: 1 },
     )
     let state = unwrap(reduce(single, { type: 'play', playerId: 'p1', cardIds: ['4C'] }, ctx()))
     const result = reduce(state, { type: 'play', playerId: 'p2', cardIds: ['5C'] }, ctx())
@@ -309,7 +309,7 @@ describe('finishing and round end', () => {
     const endless = playingState(
       { p1: cards('4C'), p2: cards('5C'), p3: cards('6C', '7C') },
       { round: 9 },
-      { ...DEFAULT_SETTINGS, totalRounds: null },
+      { ...DEFAULT_SLAVE_SETTINGS, totalRounds: null },
     )
     let state = unwrap(reduce(endless, { type: 'play', playerId: 'p1', cardIds: ['4C'] }, ctx()))
     state = unwrap(reduce(state, { type: 'play', playerId: 'p2', cardIds: ['5C'] }, ctx()))
@@ -329,7 +329,7 @@ describe('the exchange phase', () => {
     const state = toRoundTwo()
     expect(state.phase).toBe('exchange')
     expect(state.round).toBe(2)
-    expect(state.exchange?.deadline).toBe(1_000 + 30_000)
+    expect(state.phaseDeadline).toBe(1_000 + 30_000)
   })
 
   it('has already taken the slave’s two best cards', () => {

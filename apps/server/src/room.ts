@@ -11,8 +11,8 @@ import {
   MIN_PLAYERS,
   type Player,
   type PlayerId,
-  type RoomSettings,
   reduce,
+  type SlaveSettings,
   seatPlayers,
   setConnected,
 } from '@cards/game'
@@ -58,7 +58,7 @@ export type RoomResult<T = undefined> = { ok: true; value: T } | { ok: false; co
 
 const BOT_NAMES = ['หมี', 'แมว', 'กระต่าย', 'หมา', 'นก', 'ปลา'] as const
 
-export function createRoom(code: string, settings: RoomSettings): Room {
+export function createRoom(code: string, settings: SlaveSettings): Room {
   const now = Date.now()
   return {
     code,
@@ -245,7 +245,7 @@ export function updateSettings(room: Room, playerId: PlayerId, patch: SettingsPa
   if (room.state.phase !== 'lobby') return { ok: false, code: 'wrong-phase' }
 
   const current = room.state.settings
-  const settings: RoomSettings = {
+  const settings: SlaveSettings = {
     eightCut: patch.eightCut ?? current.eightCut,
     revolution: patch.revolution ?? current.revolution,
     turnSeconds: patch.turnSeconds === undefined ? current.turnSeconds : patch.turnSeconds,
@@ -412,10 +412,10 @@ export function scheduleTimers(room: Room, onChange: (events: readonly GameEvent
       )
       return
     }
-    if (state.exchange.deadline !== null) {
+    if (state.phaseDeadline !== null) {
       room.turnTimer = setTimeout(
         () => run({ type: 'timeout' }),
-        Math.max(0, state.exchange.deadline - now),
+        Math.max(0, state.phaseDeadline - now),
       )
     }
     return

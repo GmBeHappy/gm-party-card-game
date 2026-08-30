@@ -1,14 +1,15 @@
 import {
   type Card,
   canPass,
+  GAME_META,
   type GameState,
   handCounts,
   type Phase,
   type PlayerId,
   playableCardIds,
   type RoleName,
-  type RoomSettings,
   type RoundResult,
+  type SlaveSettings,
   standings,
 } from '@cards/game'
 
@@ -69,7 +70,7 @@ export interface RoomView {
   readonly code: string
   readonly hostId: PlayerId | null
   readonly phase: Phase
-  readonly settings: RoomSettings
+  readonly settings: SlaveSettings
   readonly round: number
   readonly revolution: boolean
   readonly seats: readonly SeatView[]
@@ -160,6 +161,7 @@ export function buildRoomView(input: BuildViewInput): RoomView {
     standings: standings(
       state.scores,
       members.map((member) => member.id),
+      GAME_META[state.game].scoreDirection,
     ),
     version: state.version,
   }
@@ -183,7 +185,7 @@ function buildExchangeView(state: GameState, viewerId: PlayerId | null): Exchang
   }
 
   return {
-    deadline: exchange.deadline,
+    deadline: state.phaseDeadline,
     waitingOn: pending.map((transfer) => transfer.from),
     give: mine?.count ?? null,
     received,

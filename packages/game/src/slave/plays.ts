@@ -1,6 +1,6 @@
 import type { Card } from '../core/card'
 import { strength } from './order'
-import { EIGHT_RANK, type Play, type PlayKind, type RoomSettings } from './types'
+import { EIGHT_RANK, type Play, type PlayKind, type SlaveSettings } from './types'
 
 const KINDS: Readonly<Record<number, PlayKind>> = {
   1: 'single',
@@ -59,12 +59,12 @@ export function canBeat(candidate: Play, current: Play | null, revolution: boole
 }
 
 /** Does this play end the trick immediately under the 8-cut rule? */
-export function isEightCut(play: Play, settings: RoomSettings): boolean {
+export function isEightCut(play: Play, settings: SlaveSettings): boolean {
   return settings.eightCut && play.rank === EIGHT_RANK
 }
 
 /** Does this play flip (or unflip) the rank order? */
-export function isRevolutionPlay(play: Play, settings: RoomSettings): boolean {
+export function isRevolutionPlay(play: Play, settings: SlaveSettings): boolean {
   return settings.revolution && play.count === 4
 }
 

@@ -1,6 +1,6 @@
 import type { Card, CardRank } from '../core/card'
-import type { Phase, RoundResult } from '../core/phase'
-import type { Player, PlayerId } from '../core/player'
+import type { BaseState } from '../core/module'
+import type { PlayerId } from '../core/player'
 
 /** Daifugō's own rank constants. The deck itself has no opinion about these. */
 export const TWO_RANK = 2 as const
@@ -19,7 +19,7 @@ export interface Play {
 
 export type RoleName = 'president' | 'vicePresident' | 'citizen' | 'viceSlave' | 'slave'
 
-export interface RoomSettings {
+export interface SlaveSettings {
   /** Any play containing an 8 clears the trick immediately. */
   readonly eightCut: boolean
   /** A four-of-a-kind inverts rank order for the rest of the round. */
@@ -30,7 +30,7 @@ export interface RoomSettings {
   readonly totalRounds: number | null
 }
 
-export const DEFAULT_SETTINGS: RoomSettings = {
+export const DEFAULT_SLAVE_SETTINGS: SlaveSettings = {
   eightCut: true,
   revolution: true,
   turnSeconds: 30,
@@ -58,27 +58,16 @@ export interface ExchangeTransfer {
 
 export interface ExchangeState {
   readonly transfers: readonly ExchangeTransfer[]
-  readonly deadline: number | null
 }
 
-export interface GameState {
-  readonly phase: Phase
-  readonly settings: RoomSettings
-  /** Seat order. Turn order follows this array, wrapping around. */
-  readonly players: readonly Player[]
-  readonly round: number
-  readonly hands: Readonly<Record<PlayerId, readonly Card[]>>
+export interface SlaveState extends BaseState {
+  readonly game: 'slave'
+  readonly settings: SlaveSettings
   readonly trick: Trick
   readonly revolution: boolean
-  readonly currentPlayer: PlayerId | null
   /** Players who have emptied their hand this round, in finishing order. */
   readonly finishOrder: readonly PlayerId[]
   /** Roles carried from the previous round; drives the exchange phase. */
   readonly roles: Readonly<Record<PlayerId, RoleName>>
-  readonly scores: Readonly<Record<PlayerId, number>>
   readonly exchange: ExchangeState | null
-  readonly history: readonly RoundResult[]
-  /** Epoch ms after which the current turn auto-resolves; `null` if untimed. */
-  readonly turnDeadline: number | null
-  readonly version: number
 }

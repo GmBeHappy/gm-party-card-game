@@ -8,11 +8,11 @@ import {
   isRevolutionPlay,
   legalPlays,
 } from '../src/slave/plays'
-import { DEFAULT_SETTINGS, type Play, type RoomSettings } from '../src/slave/types'
+import { DEFAULT_SLAVE_SETTINGS, type Play, type SlaveSettings } from '../src/slave/types'
 import { c, cards } from './helpers'
 
-const S = DEFAULT_SETTINGS
-const off = (patch: Partial<RoomSettings>): RoomSettings => ({ ...S, ...patch })
+const S = DEFAULT_SLAVE_SETTINGS
+const off = (patch: Partial<SlaveSettings>): SlaveSettings => ({ ...S, ...patch })
 
 function play(...ids: string[]): Play {
   const result = classifyPlay(cards(...ids))

@@ -3,7 +3,7 @@ import { createDeck } from '../src/core/card'
 import type { Player, PlayerId } from '../src/core/player'
 import { createRng } from '../src/core/rng'
 import { createInitialState } from '../src/slave/engine'
-import { DEFAULT_SETTINGS, type GameState, type RoomSettings } from '../src/slave/types'
+import { DEFAULT_SLAVE_SETTINGS, type SlaveSettings, type SlaveState } from '../src/slave/types'
 
 const DECK = createDeck()
 
@@ -36,9 +36,9 @@ export const ctx = (now = 1_000) => ({ now, rng: createRng(42) })
 /** A state parked in `playing` with hands dictated by the test. */
 export function playingState(
   hands: Record<PlayerId, Card[]>,
-  overrides: Partial<GameState> = {},
-  settings: RoomSettings = DEFAULT_SETTINGS,
-): GameState {
+  overrides: Partial<SlaveState> = {},
+  settings: SlaveSettings = DEFAULT_SLAVE_SETTINGS,
+): SlaveState {
   const players = Object.keys(hands).map((id) => ({
     id,
     name: id,

@@ -1,4 +1,4 @@
-import type { RoomSettings } from '@cards/game'
+import type { SlaveSettings } from '@cards/game'
 import { anyoneConnected, clearTimers, createRoom, type Room } from './room'
 
 /**
@@ -8,7 +8,7 @@ import { anyoneConnected, clearTimers, createRoom, type Room } from './room'
 export interface RoomStore {
   get(code: string): Room | undefined
   has(code: string): boolean
-  create(code: string, settings: RoomSettings): Room
+  create(code: string, settings: SlaveSettings): Room
   delete(code: string): void
   all(): Room[]
 }
@@ -24,7 +24,7 @@ export class MemoryRoomStore implements RoomStore {
     return this.rooms.has(code)
   }
 
-  create(code: string, settings: RoomSettings): Room {
+  create(code: string, settings: SlaveSettings): Room {
     const room = createRoom(code, settings)
     this.rooms.set(code, room)
     return room
