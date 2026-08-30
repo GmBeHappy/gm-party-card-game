@@ -1,4 +1,4 @@
-import type { ClientMessage, RoomView, ServerMessage } from '@slave/shared'
+import type { ClientMessage, RoomView, ServerMessage } from '@cards/shared'
 
 /**
  * A minimal test client that speaks the real protocol over a real socket —

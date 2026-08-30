@@ -1,4 +1,4 @@
-import type { RoomSettings } from '@slave/game'
+import type { RoomSettings } from '@cards/game'
 import { anyoneConnected, clearTimers, createRoom, type Room } from './room'
 
 /**

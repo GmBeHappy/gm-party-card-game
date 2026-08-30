@@ -15,7 +15,7 @@ import {
   reduce,
   seatPlayers,
   setConnected,
-} from '@slave/game'
+} from '@cards/game'
 import {
   buildRoomView,
   type ErrorCode,
@@ -23,7 +23,7 @@ import {
   type RoomView,
   type ServerMessage,
   type SettingsPatch,
-} from '@slave/shared'
+} from '@cards/shared'
 import { generatePlayerId } from './codes'
 import { timings } from './config'
 

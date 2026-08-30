@@ -1,7 +1,7 @@
 'use client'
 
-import type { Card, Suit } from '@slave/game'
-import { rankLabel } from '@slave/game'
+import type { Card, Suit } from '@cards/game'
+import { rankLabel } from '@cards/game'
 import { motion } from 'motion/react'
 import { cn } from '@/lib/utils'
 

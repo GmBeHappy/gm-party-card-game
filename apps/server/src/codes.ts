@@ -1,4 +1,4 @@
-import { ROOM_CODE_ALPHABET, ROOM_CODE_LENGTH } from '@slave/shared'
+import { ROOM_CODE_ALPHABET, ROOM_CODE_LENGTH } from '@cards/shared'
 
 export function generateRoomCode(exists: (code: string) => boolean): string {
   for (let attempt = 0; attempt < 100; attempt++) {

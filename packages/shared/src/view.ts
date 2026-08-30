@@ -10,7 +10,7 @@ import {
   type RoomSettings,
   type RoundResult,
   standings,
-} from '@slave/game'
+} from '@cards/game'
 
 export interface MemberInfo {
   readonly id: PlayerId

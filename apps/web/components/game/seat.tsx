@@ -1,7 +1,7 @@
 'use client'
 
-import type { RoleName } from '@slave/game'
-import type { SeatView } from '@slave/shared'
+import type { RoleName } from '@cards/game'
+import type { SeatView } from '@cards/shared'
 import { Bot, Crown, WifiOff } from 'lucide-react'
 import { motion } from 'motion/react'
 import { Identicon } from '@/components/game/identicon'

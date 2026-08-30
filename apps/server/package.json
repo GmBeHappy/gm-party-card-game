@@ -1,5 +1,5 @@
 {
-  "name": "@slave/server",
+  "name": "@cards/server",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -11,8 +11,8 @@
   },
   "dependencies": {
     "@elysiajs/cors": "^1.4.0",
-    "@slave/game": "workspace:*",
-    "@slave/shared": "workspace:*",
+    "@cards/game": "workspace:*",
+    "@cards/shared": "workspace:*",
     "elysia": "^1.4.10",
     "zod": "^4.4.3"
   }

@@ -1,6 +1,6 @@
+import { DEFAULT_SETTINGS, type GameEvent, MAX_PLAYERS } from '@cards/game'
+import { clientMessageSchema, ERROR_MESSAGES, type ErrorCode, roomCodeSchema } from '@cards/shared'
 import { cors } from '@elysiajs/cors'
-import { DEFAULT_SETTINGS, type GameEvent, MAX_PLAYERS } from '@slave/game'
-import { clientMessageSchema, ERROR_MESSAGES, type ErrorCode, roomCodeSchema } from '@slave/shared'
 import { Elysia } from 'elysia'
 import { generateRoomCode } from './codes'
 import { GC_INTERVAL_MS, ROOM_TTL_MS } from './config'

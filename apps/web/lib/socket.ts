@@ -1,6 +1,6 @@
 'use client'
 
-import type { ClientMessage, ServerMessage } from '@slave/shared'
+import type { ClientMessage, ServerMessage } from '@cards/shared'
 
 export type ConnectionStatus = 'connecting' | 'open' | 'reconnecting' | 'closed'
 

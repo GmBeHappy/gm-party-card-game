@@ -1,4 +1,4 @@
-import type { Card } from '@slave/game'
+import type { Card } from '@cards/game'
 
 /**
  * Selection rules for the hand. A play is always cards of one rank, so

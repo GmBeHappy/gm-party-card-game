@@ -1,4 +1,4 @@
-import type { GameEvent } from '@slave/game'
+import type { GameEvent } from '@cards/game'
 import type { ErrorCode } from './protocol'
 import type { RoomView } from './view'
 

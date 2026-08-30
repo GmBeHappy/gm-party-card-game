@@ -1,7 +1,7 @@
 import type { NextConfig } from 'next'
 
 const nextConfig: NextConfig = {
-  transpilePackages: ['@slave/game', '@slave/shared'],
+  transpilePackages: ['@cards/game', '@cards/shared'],
 }
 
 export default nextConfig

@@ -1,7 +1,7 @@
 'use client'
 
-import { MAX_PLAYERS, MIN_PLAYERS } from '@slave/game'
-import type { RoomView } from '@slave/shared'
+import { MAX_PLAYERS, MIN_PLAYERS } from '@cards/game'
+import type { RoomView } from '@cards/shared'
 import { Bot, Check, Copy, Crown, Shuffle, UserMinus } from 'lucide-react'
 import { AnimatePresence, motion } from 'motion/react'
 import { useState } from 'react'

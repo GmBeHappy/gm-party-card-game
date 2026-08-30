@@ -1,6 +1,6 @@
 'use client'
 
-import type { RoomView } from '@slave/shared'
+import type { RoomView } from '@cards/shared'
 import { Trophy } from 'lucide-react'
 import { motion } from 'motion/react'
 import { Identicon } from '@/components/game/identicon'

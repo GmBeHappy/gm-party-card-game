@@ -1,6 +1,6 @@
 'use client'
 
-import type { RoomView } from '@slave/shared'
+import type { RoomView } from '@cards/shared'
 import { ArrowDown, ArrowUp } from 'lucide-react'
 import { motion } from 'motion/react'
 import { useState } from 'react'

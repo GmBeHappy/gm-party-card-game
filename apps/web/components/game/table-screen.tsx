@@ -1,6 +1,6 @@
 'use client'
 
-import type { RoomView } from '@slave/shared'
+import type { RoomView } from '@cards/shared'
 import { motion } from 'motion/react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Hand } from '@/components/game/hand'

@@ -1,7 +1,7 @@
 'use client'
 
-import type { GameEvent } from '@slave/game'
-import type { ErrorCode, RoomView, SettingsPatch } from '@slave/shared'
+import type { GameEvent } from '@cards/game'
+import type { ErrorCode, RoomView, SettingsPatch } from '@cards/shared'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { WS_URL } from './config'
 import { getToken, setToken } from './session'

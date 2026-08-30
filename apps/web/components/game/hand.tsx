@@ -1,6 +1,6 @@
 'use client'
 
-import type { Card } from '@slave/game'
+import type { Card } from '@cards/game'
 import { motion } from 'motion/react'
 import { PlayingCard } from '@/components/game/playing-card'
 

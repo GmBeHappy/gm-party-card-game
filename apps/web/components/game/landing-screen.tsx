@@ -1,6 +1,6 @@
 'use client'
 
-import { ROOM_CODE_LENGTH } from '@slave/shared'
+import { ROOM_CODE_LENGTH } from '@cards/shared'
 import { motion } from 'motion/react'
 import { useRouter } from 'next/navigation'
 import { type FormEvent, useEffect, useState } from 'react'
