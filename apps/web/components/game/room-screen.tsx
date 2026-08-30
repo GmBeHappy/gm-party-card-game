@@ -4,6 +4,9 @@ import { Loader2 } from 'lucide-react'
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
+import { HeartsPassingScreen } from '@/components/game/hearts/passing-screen'
+import { HeartsRoundSummary } from '@/components/game/hearts/round-summary'
+import { HeartsTableScreen } from '@/components/game/hearts/table-screen'
 import { LobbyScreen } from '@/components/game/lobby-screen'
 import { ReconnectOverlay } from '@/components/game/reconnect-overlay'
 import { ExchangeScreen } from '@/components/game/slave/exchange-screen'
@@ -100,16 +103,29 @@ function PhaseScreen({
   actions: ReturnType<typeof useRoom>['actions']
   batch: ReturnType<typeof useRoom>['batch']
 }) {
+  const hearts = view.game === 'hearts'
   switch (view.phase) {
     case 'lobby':
       return <LobbyScreen view={view} actions={actions} />
     case 'exchange':
-      return <ExchangeScreen view={view} actions={actions} />
+      return hearts ? (
+        <HeartsPassingScreen view={view} actions={actions} />
+      ) : (
+        <ExchangeScreen view={view} actions={actions} />
+      )
     case 'playing':
-      return <TableScreen view={view} actions={actions} batch={batch} />
+      return hearts ? (
+        <HeartsTableScreen view={view} actions={actions} batch={batch} />
+      ) : (
+        <TableScreen view={view} actions={actions} batch={batch} />
+      )
     case 'roundEnd':
     case 'matchEnd':
-      return <RoundSummary view={view} actions={actions} />
+      return hearts ? (
+        <HeartsRoundSummary view={view} actions={actions} />
+      ) : (
+        <RoundSummary view={view} actions={actions} />
+      )
   }
 }
 

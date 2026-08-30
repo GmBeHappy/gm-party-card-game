@@ -2,13 +2,22 @@
 
 import { AnimatePresence, motion } from 'motion/react'
 
-export type FlashKind = 'revolution' | 'eightCut' | null
+export type FlashKind = 'revolution' | 'eightCut' | 'heartsBroken' | 'moonShot' | null
+
+/** Word and colour for each loud moment. The tilt alternates so two in a row read as two. */
+const FLASH: Readonly<Record<string, { word: string; tone: string; from: number; to: number }>> = {
+  revolution: { word: 'ปฏิวัติ!', tone: 'text-bubblegum', from: -10, to: 4 },
+  eightCut: { word: 'ตัด 8!', tone: 'text-lemon', from: 6, to: -3 },
+  heartsBroken: { word: 'โพแดงแตก!', tone: 'text-suit-heart', from: -8, to: 3 },
+  moonShot: { word: 'ยิงพระจันทร์!', tone: 'text-lemon', from: 8, to: -4 },
+}
 
 /** The loud moments: a full-bleed flourish that clears itself. */
 export function TableFlash({ flash }: { flash: { kind: FlashKind; id: number } }) {
+  const shown = flash.kind === null ? null : FLASH[flash.kind]
   return (
     <AnimatePresence>
-      {flash.kind !== null && (
+      {shown !== undefined && shown !== null && (
         <motion.div
           key={flash.id}
           initial={{ opacity: 0, scale: 1.4 }}
@@ -18,15 +27,11 @@ export function TableFlash({ flash }: { flash: { kind: FlashKind; id: number } }
           className="pointer-events-none fixed inset-0 z-40 flex items-center justify-center"
         >
           <motion.span
-            initial={{ rotate: flash.kind === 'revolution' ? -10 : 6 }}
-            animate={{ rotate: flash.kind === 'revolution' ? 4 : -3 }}
-            className={
-              flash.kind === 'revolution'
-                ? 'ink-edge font-display text-6xl text-bubblegum drop-shadow-[6px_6px_0_var(--ink)]'
-                : 'ink-edge font-display text-6xl text-lemon drop-shadow-[6px_6px_0_var(--ink)]'
-            }
+            initial={{ rotate: shown.from }}
+            animate={{ rotate: shown.to }}
+            className={`ink-edge font-display text-6xl drop-shadow-[6px_6px_0_var(--ink)] ${shown.tone}`}
           >
-            {flash.kind === 'revolution' ? 'ปฏิวัติ!' : 'ตัด 8!'}
+            {shown.word}
           </motion.span>
         </motion.div>
       )}
