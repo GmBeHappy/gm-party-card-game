@@ -1,0 +1,25 @@
+# Build both images from this repo instead of pulling them. Use this to deploy
+# anywhere that is not the machine you are sitting at, because the web bundle's
+# server URLs are fixed at build time.
+#
+#   PUBLIC_SERVER_URL=https://cards.example.com \
+#   PUBLIC_WS_URL=wss://cards.example.com/ws \
+#   IMAGE_PLATFORM=linux/arm64 \
+#   docker compose -f docker-compose.yml -f docker-compose.build.yml up --build -d
+#
+# IMAGE_PLATFORM should be your own architecture (linux/arm64 on Apple Silicon,
+# linux/amd64 on most servers) — there is no reason to emulate a build.
+
+services:
+  server:
+    build:
+      context: .
+      dockerfile: apps/server/Dockerfile
+
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+      args:
+        NEXT_PUBLIC_SERVER_URL: ${PUBLIC_SERVER_URL:-http://localhost:3001}
+        NEXT_PUBLIC_WS_URL: ${PUBLIC_WS_URL:-ws://localhost:3001/ws}

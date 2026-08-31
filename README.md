@@ -218,6 +218,29 @@ player's browser at their own machine. Pass the real URLs at build time.
 
 Both images run as a non-root user and carry a `HEALTHCHECK`.
 
+### Compose
+
+```bash
+cp .env.compose.example .env    # then put a real SESSION_SECRET in it
+docker compose up -d            # http://localhost:3000
+```
+
+That runs the published images. The web one has `http://localhost:3001`
+compiled into its client bundle, so it works on the machine running compose and
+nowhere else. To deploy somewhere real, build it with the URLs players will
+actually use:
+
+```bash
+PUBLIC_SERVER_URL=https://cards.example.com \
+PUBLIC_WS_URL=wss://cards.example.com/ws \
+IMAGE_PLATFORM=linux/amd64 \
+docker compose -f docker-compose.yml -f docker-compose.build.yml up --build -d
+```
+
+CI publishes `linux/amd64`, so on Apple Silicon the published images run under
+emulation — fine for this workload. Run the workflow manually with both
+platforms, or build locally with `IMAGE_PLATFORM=linux/arm64`, to avoid it.
+
 ### CI
 
 `.github/workflows/docker.yml` runs `bun run check`, `bun run typecheck` and

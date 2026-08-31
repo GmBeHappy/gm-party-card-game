@@ -1,0 +1,43 @@
+# Run the published images.
+#
+#   cp .env.compose.example .env    # then edit SESSION_SECRET
+#   docker compose up -d
+#
+# Then open http://localhost:3000.
+#
+# ── One thing to know before deploying this anywhere else ──────────────────
+#
+# Next compiles NEXT_PUBLIC_* into the client bundle at BUILD time, so the
+# published web image has http://localhost:3001 baked in. It works when the
+# player's own browser can reach the game server on localhost:3001 — that is,
+# on the machine running compose. Pointing it at a real hostname means
+# rebuilding the web image, not setting an environment variable here:
+# see docker-compose.build.yml.
+
+services:
+  server:
+    image: ghcr.io/gmbehappy/gm-party-card-game/server:latest
+    # The published images are built for amd64. On Apple Silicon this runs
+    # under emulation, which is fine for this workload. Set IMAGE_PLATFORM to
+    # your own architecture when building locally (see docker-compose.build.yml).
+    platform: ${IMAGE_PLATFORM:-linux/amd64}
+    environment:
+      # Signs seat tokens. Change it and every seat token from before the
+      # change stops working, so set it once and keep it.
+      SESSION_SECRET: ${SESSION_SECRET:?set SESSION_SECRET in .env — see .env.compose.example}
+      PORT: 3001
+    ports:
+      - "${SERVER_PORT:-3001}:3001"
+    restart: unless-stopped
+
+  web:
+    image: ghcr.io/gmbehappy/gm-party-card-game/web:latest
+    platform: ${IMAGE_PLATFORM:-linux/amd64}
+    ports:
+      - "${WEB_PORT:-3000}:3000"
+    # The browser talks to the game server directly; the web container never
+    # does. This only orders startup so the first page load finds a live server.
+    depends_on:
+      server:
+        condition: service_healthy
+    restart: unless-stopped
