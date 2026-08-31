@@ -218,6 +218,12 @@ player's browser at their own machine. Pass the real URLs at build time.
 
 Both images run as a non-root user and carry a `HEALTHCHECK`.
 
+**`SESSION_SECRET` is required in production.** It signs the seat tokens that
+prove a returning player owns their seat, so anyone who knows it can forge one
+for any seat in any room. The server refuses to start when it is missing, empty,
+or still the committed development value — `bun dev` keeps falling back to that
+value on your own machine, where it costs nothing.
+
 ### Compose
 
 ```bash
