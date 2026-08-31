@@ -12,11 +12,15 @@
 
 services:
   server:
+    # A distinct tag, so a locally built image never shadows the published one
+    # and `docker compose pull` cannot quietly replace it.
+    image: gm-party-card-game/server:local
     build:
       context: .
       dockerfile: apps/server/Dockerfile
 
   web:
+    image: gm-party-card-game/web:local
     build:
       context: .
       dockerfile: apps/web/Dockerfile

@@ -243,6 +243,15 @@ IMAGE_PLATFORM=linux/amd64 \
 docker compose -f docker-compose.yml -f docker-compose.build.yml up --build -d
 ```
 
+Locally built images are tagged `gm-party-card-game/{web,server}:local`, so they
+never shadow the published ones and `docker compose pull` cannot quietly replace
+them.
+
+Put the API behind a reverse proxy that forwards **WebSocket upgrades** on
+`/ws` — play runs entirely over that socket, so a proxy that only forwards HTTP
+leaves the lobby working and the game dead. An `https` API needs a `wss` socket
+on the same host; the browser blocks the mix otherwise.
+
 CI publishes `linux/amd64`, so on Apple Silicon the published images run under
 emulation — fine for this workload. Run the workflow manually with both
 platforms, or build locally with `IMAGE_PLATFORM=linux/arm64`, to avoid it.
